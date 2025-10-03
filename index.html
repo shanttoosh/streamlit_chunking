@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Chunking Optimizer Pro</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <!-- Mobile Sidebar Toggle -->
+    <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle" aria-label="Toggle Sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🚀</div>
+                <div class="logo-text">CSV Chunker Pro</div>
+            </div>
+
+            <div class="process-steps">
+                <div class="steps-title">Processing Pipeline</div>
+                
+                <div class="process-step" id="step-upload">
+                    <div class="step-content">
+                        <div class="step-details">
+                            <div class="step-title">File Upload</div>
+                            <div class="step-description">Load CSV data</div>
+                        </div>
+                        <div class="step-right-container">
+                            <div class="step-status-text" id="status-text-upload"></div>
+                            <div class="step-timing" id="timing-upload"></div>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-step" id="step-analyze" style="display: none;">
+                    <div class="step-content">
+                        <div class="step-details">
+                            <div class="step-title">Data Analysis</div>
+                            <div class="step-description">Analyze structure</div>
+                        </div>
+                        <div class="step-right-container">
+                            <div class="step-status-text" id="status-text-analyze"></div>
+                            <div class="step-timing" id="timing-analyze"></div>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-step" id="step-preprocess">
+                    <div class="step-content">
+                        <div class="step-details">
+                            <div class="step-title">Preprocessing</div>
+                            <div class="step-description">Header validation, whitespace removal, encoding validation</div>
+                        </div>
+                        <div class="step-right-container">
+                            <div class="step-status-text" id="status-text-preprocess"></div>
+                            <div class="step-timing" id="timing-preprocess"></div>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-step" id="step-chunking">
+                    <div class="step-content">
+                        <div class="step-details">
+                            <div class="step-title">Chunking</div>
+                            <div class="step-description">Split into chunks</div>
+                        </div>
+                        <div class="step-right-container">
+                            <div class="step-status-text" id="status-text-chunking"></div>
+                            <div class="step-timing" id="timing-chunking"></div>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-step" id="step-embedding">
+                    <div class="step-content">
+                        <div class="step-details">
+                            <div class="step-title">Embedding</div>
+                            <div class="step-description">Generate vectors</div>
+                        </div>
+                        <div class="step-right-container">
+                            <div class="step-status-text" id="status-text-embedding"></div>
+                            <div class="step-timing" id="timing-embedding"></div>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-step" id="step-storage">
+                    <div class="step-content">
+                        <div class="step-details">
+                            <div class="step-title">Storing</div>
+                            <div class="step-description">Save to database</div>
+                        </div>
+                        <div class="step-right-container">
+                            <div class="step-status-text" id="status-text-storage"></div>
+                            <div class="step-timing" id="timing-storage"></div>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-step" id="step-retrieval">
+                    <div class="step-content">
+                        <div class="step-details">
+                            <div class="step-title">Retrieval</div>
+                            <div class="step-description">Test retrieval</div>
+                        </div>
+                        <div class="step-right-container">
+                            <div class="step-status-text" id="status-text-retrieval"></div>
+                            <div class="step-timing" id="timing-retrieval"></div>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="overall-progress"></div>
+                </div>
+                <div class="progress-text" id="progress-text">Ready to start</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-chunks">0</div>
+                    <div class="stat-label">Total Chunks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="processing-time">0s</div>
+                    <div class="stat-label">Process Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="file-size">0MB</div>
+                    <div class="stat-label">File Size</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="memory-usage">0MB</div>
+                    <div class="stat-label">Memory Usage</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div>
+                    <h1 class="header-title">CSV Chunking Optimizer</h1>
+                    <p style="color: var(--text-secondary); margin-top: 5px;">Transform your CSV data into optimized chunks for better processing</p>
+                </div>
+            </div>
+
+            <!-- Layer Selection -->
+            <div class="layer-selection">
+                <div class="layer-card active" onclick="selectLayer(1)" id="layer-card-1">
+                    <div class="layer-header">
+                        <div class="layer-icon">⚡</div>
+                        <div class="layer-title">Fast Mode</div>
+                    </div>
+                    <div class="layer-description">
+                        Auto-optimized processing with best-practice defaults. Perfect for quick results without manual configuration.
+                    </div>
+                    <ul class="layer-features">
+                        <li>Automatic parameter optimization</li>
+                        <li>One-click processing</li>
+                        <li>Fastest execution time</li>
+                    </ul>
+                </div>
+
+                <div class="layer-card" onclick="selectLayer(2)" id="layer-card-2">
+                    <div class="layer-header">
+                        <div class="layer-icon">⚙️</div>
+                        <div class="layer-title">Config Mode</div>
+                    </div>
+                    <div class="layer-description">
+                        High-level configuration options for customized processing. Balance between ease-of-use and control.
+                    </div>
+                    <ul class="layer-features">
+                        <li>Preprocessing options</li>
+                        <li>Model selection</li>
+                        <li>Storage configuration</li>
+                    </ul>
+                </div>
+
+                <div class="layer-card" onclick="selectLayer(3)" id="layer-card-3">
+                    <div class="layer-header">
+                        <div class="layer-icon">🔬</div>
+                        <div class="layer-title">Deep Config</div>
+                    </div>
+                    <div class="layer-description">
+                        Advanced parameter tuning for maximum control and optimization. Perfect for expert users and specific use cases.
+                    </div>
+                    <ul class="layer-features">
+                        <li>Full parameter control</li>
+                        <li>Advanced algorithms</li>
+                        <li>Custom optimization</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="file-upload-section">
+                <div class="file-upload" onclick="document.getElementById('csvFile').click()" id="file-upload-area">
+                    <h3 class="upload-title">Upload Your CSV File</h3>
+                    <p class="upload-subtitle">Drop your file here or click to browse</p>
+                    <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+
+            <!-- Processing Pipeline Section (Hidden Initially) -->
+            <div class="processing-pipeline-section" id="processing-pipeline-section">
+                <!-- Layer 1: Fast Mode -->
+                <div class="content-section active" id="content-layer-1">
+                    <div class="simple-processing">
+                        <!-- Query Section -->
+                        <div class="query-section" id="query-section" style="display: none;">
+                            <div class="query-bar">
+                                <input type="text" class="query-input" id="query-input" placeholder="Enter your search query...">
+                                <div class="query-icon" onclick="performQuery()" id="query-icon">🔍</div>
+                            </div>
+            <div class="query-results" id="query-results">
+                <!-- Query results will be populated here -->
+            </div>
+            
+        </div>
+                    </div>
+                </div>
+
+            <!-- Layer 2: Config Mode -->
+            <div class="content-section" id="content-layer-2">
+                <div class="config-grid">
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div class="config-icon">🔧</div>
+                            <div class="config-title">Preprocessing Options</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Null Value Handling</label>
+                            <select class="form-control" id="null-handling">
+                                <option value="auto">Auto-detect & Handle</option>
+                                <option value="remove">Remove null rows</option>
+                                <option value="fill-mean">Fill with mean</option>
+                                <option value="fill-mode">Fill with mode</option>
+                                <option value="forward-fill">Forward fill</option>
+                                <option value="custom">Custom value</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data Type Conversion</label>
+                            <select class="form-control" id="dtype-conversion">
+                                <option value="auto">Auto-infer types</option>
+                                <option value="string">Keep as strings</option>
+                                <option value="manual">Manual mapping</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-grid">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="remove-duplicates" checked>
+                                <label for="remove-duplicates">Remove Duplicates</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="normalize-text" checked>
+                                <label for="normalize-text">Normalize Text</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div class="config-icon">✂️</div>
+                            <div class="config-title">Chunking Strategy</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Chunking Method</label>
+                            <select class="form-control" id="chunking-method">
+                                <option value="semantic">Semantic Chunking</option>
+                                <option value="fixed">Fixed Size</option>
+                                <option value="recursive">Recursive Text Splitter</option>
+                                <option value="document">Document-based</option>
+                                <option value="agentic">Agentic Chunking</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Chunk Size</label>
+                            <select class="form-control" id="chunk-size">
+                                <option value="auto">Auto-optimize</option>
+                                <option value="128">Small (128 tokens)</option>
+                                <option value="512">Medium (512 tokens)</option>
+                                <option value="1024">Large (1024 tokens)</option>
+                                <option value="2048">X-Large (2048 tokens)</option>
+                            </select>
+                        </div>
+                        <div class="range-group">
+                            <label class="form-label">Overlap Percentage</label>
+                            <input type="range" class="range-slider" id="overlap-range" min="0" max="50" value="10" oninput="updateRangeValue('overlap-range', 'overlap-value')">
+                            <div class="range-labels">
+                                <span>0%</span>
+                                <span class="range-value" id="overlap-value">10%</span>
+                                <span>50%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div class="config-icon">🧠</div>
+                            <div class="config-title">Embedding Model</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Model Selection</label>
+                            <select class="form-control" id="embedding-model">
+                                <option value="openai-large">OpenAI text-embedding-3-large</option>
+                                <option value="openai-small">OpenAI text-embedding-3-small</option>
+                                <option value="sentence-bert">Sentence-BERT</option>
+                                <option value="cohere">Cohere Embed v3</option>
+                                <option value="huggingface">HuggingFace Models</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Embedding Dimensions</label>
+                            <select class="form-control" id="embedding-dims">
+                                <option value="1536">1536 (Recommended)</option>
+                                <option value="1024">1024 (Balanced)</option>
+                                <option value="512">512 (Fast)</option>
+                                <option value="256">256 (Fastest)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div class="config-icon">💾</div>
+                            <div class="config-title">Vector Storage</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Storage Backend</label>
+                            <select class="form-control" id="storage-backend">
+                                <option value="faiss">FAISS (Recommended)</option>
+                                <option value="chroma">Chroma DB</option>
+                                <option value="pinecone">Pinecone</option>
+                                <option value="weaviate">Weaviate</option>
+                                <option value="qdrant">Qdrant</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Index Type</label>
+                            <select class="form-control" id="index-type">
+                                <option value="flat">Exact Search (Flat)</option>
+                                <option value="ivf">Approximate (IVF)</option>
+                                <option value="hnsw">Graph-based (HNSW)</option>
+                            </select>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="form-label">Enable Compression</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="enable-compression">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer 3: Deep Config -->
+            <div class="content-section" id="content-layer-3">
+                <div class="deep-config-container">
+                    <!-- CSV Preview Section -->
+                    <div class="csv-preview-section" id="csv-preview-section" style="display: none;">
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">📊</div>
+                                <div class="config-title">CSV Data Preview</div>
+                                <div class="preview-status" id="preview-status">Raw Data</div>
+                            </div>
+                            <div class="csv-preview-container">
+                                <div class="csv-table-wrapper">
+                                    <table class="csv-preview-table" id="csv-preview-table">
+                                        <thead id="csv-headers">
+                                            <!-- Headers will be populated dynamically -->
+                                        </thead>
+                                        <tbody id="csv-body">
+                                            <!-- Data will be populated dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Default Preprocessing Section -->
+                    <div class="default-preprocessing-section" id="default-preprocessing-section" style="display: none;">
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">⚡</div>
+                                <div class="config-title">Default Preprocessing</div>
+                            </div>
+                            <div class="preprocessing-list">
+                                <div class="preprocessing-item">
+                                    <div class="preprocessing-icon">✓</div>
+                                    <div class="preprocessing-text">Data Encoding Validation - UTF-8</div>
+                                    <div class="preprocessing-status" id="encoding-status">Pending</div>
+                                </div>
+                                <div class="preprocessing-item">
+                                    <div class="preprocessing-icon">✓</div>
+                                    <div class="preprocessing-text">Headers Validation</div>
+                                    <div class="preprocessing-status" id="headers-status">Pending</div>
+                                </div>
+                                <div class="preprocessing-item">
+                                    <div class="preprocessing-icon">✓</div>
+                                    <div class="preprocessing-text">Removal of White Space</div>
+                                    <div class="preprocessing-status" id="whitespace-status">Pending</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="runDefaultPreprocessing()" id="run-default-btn">
+                                Run Default Preprocessing
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Manual Preprocessing Section -->
+                    <div class="manual-preprocessing-section" id="manual-preprocessing-section" style="display: none;">
+                        
+                        <!-- Data Type Conversion -->
+                        <div class="config-card preprocessing-step" id="datatype-conversion-step">
+                            <div class="config-card-header">
+                                <div class="config-icon">🔄</div>
+                                <div class="config-title">Data Type Conversion</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Select column to handle data type conversion</label>
+                                <select class="form-control" id="datatype-column-select">
+                                    <option value="">Select a column...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Select handling strategy:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="datatype-strategy" value="leave" checked>
+                                        <span>Leave as it</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="datatype-strategy" value="object">
+                                        <span>Object</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="datatype-strategy" value="numeric">
+                                        <span>Numeric</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="datatype-strategy" value="datetime">
+                                        <span>DateTime</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="datatype-strategy" value="bool">
+                                        <span>Boolean</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="applyDataTypeConversion()">
+                                Apply Type Conversion
+                            </button>
+                        </div>
+
+                        <!-- Null Handling -->
+                        <div class="config-card preprocessing-step" id="null-handling-step" style="display: none;">
+                            <div class="config-card-header">
+                                <div class="config-icon">🚫</div>
+                                <div class="config-title">Null Values Handling</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Select column to handle nulls</label>
+                                <select class="form-control" id="null-column-select">
+                                    <option value="">Select a column...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Select handling strategy:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="null-strategy" value="skip" checked>
+                                        <span>Skip / Leave as is</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="null-strategy" value="drop">
+                                        <span>Drop Rows</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="null-strategy" value="mean">
+                                        <span>Fill with Mean</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="null-strategy" value="median">
+                                        <span>Fill with Median</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="null-strategy" value="mode">
+                                        <span>Fill with Mode</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="null-strategy" value="custom">
+                                        <span>Fill with Custom Value</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group" id="custom-value-group" style="display: none;">
+                                <label class="form-label">Custom Value</label>
+                                <input type="text" class="form-control" id="custom-null-value" placeholder="Enter custom value">
+                            </div>
+                            <button class="btn btn-secondary" onclick="applyNullHandling()">
+                                Apply Null Handling
+                            </button>
+                        </div>
+
+                        <!-- Duplicate Handling -->
+                        <div class="config-card preprocessing-step" id="duplicate-handling-step" style="display: none;">
+                            <div class="config-card-header">
+                                <div class="config-icon">🔄</div>
+                                <div class="config-title">Duplicate Handling</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Select handling strategy:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="duplicate-strategy" value="remove" checked>
+                                        <span>Remove Duplicates</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="duplicate-strategy" value="leave">
+                                        <span>Leave as is</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="applyDuplicateHandling()">
+                                Apply Duplicate Handling
+                            </button>
+                        </div>
+
+                        <!-- Text Processing -->
+                        <div class="config-card preprocessing-step" id="text-processing-step" style="display: none;">
+                            <div class="config-card-header">
+                                <div class="config-icon">📝</div>
+                                <div class="config-title">Text Processing</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stop Word Removal:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="stopword-strategy" value="apply" checked>
+                                        <span>Apply Stopword Removal</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="stopword-strategy" value="skip">
+                                        <span>Skip</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Text Normalization:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="normalization-strategy" value="lemmatization" checked>
+                                        <span>Apply Lemmatization</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="normalization-strategy" value="stemming">
+                                        <span>Apply Stemming</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="normalization-strategy" value="skip">
+                                        <span>Skip</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="applyTextProcessing()">
+                                Apply Text Processing
+                            </button>
+                        </div>
+
+                        <!-- Download Preprocessed CSV -->
+                        <div class="config-card" id="download-preprocessed-section" style="display: none;">
+                            <div class="config-card-header">
+                                <div class="config-icon">💾</div>
+                                <div class="config-title">Manual Preprocessing Complete</div>
+                            </div>
+                            <button class="btn btn-success" onclick="downloadPreprocessedCSV()">
+                                Download Preprocessed CSV as ZIP
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Metadata Handling Section -->
+                    <div class="metadata-handling-section" id="metadata-handling-section" style="display: none;">
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">📋</div>
+                                <div class="config-title">Metadata Handling</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">How many numeric columns to include (store min/mean/max per chunk)</label>
+                                <input type="number" class="form-control" id="numeric-columns-count" value="2" min="0" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Select numeric columns</label>
+                                <select class="form-control" id="numeric-columns-select" multiple>
+                                    <!-- Options populated dynamically -->
+                                </select>
+                                <div class="selected-columns" id="selected-numeric-columns"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">How many categorical columns to include</label>
+                                <input type="number" class="form-control" id="categorical-columns-count" value="3" min="0" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Select categorical columns</label>
+                                <select class="form-control" id="categorical-columns-select" multiple>
+                                    <!-- Options populated dynamically -->
+                                </select>
+                                <div class="selected-columns" id="selected-categorical-columns"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Storage Option:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="metadata-storage" value="store" checked>
+                                        <span>Store metadata in DB</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="metadata-storage" value="skip">
+                                        <span>Skip</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chunking Section -->
+                    <div class="chunking-section" id="chunking-section" style="display: none;">
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">✂️</div>
+                                <div class="config-title">CSV Chunking</div>
+                            </div>
+                            <button class="btn btn-primary" onclick="startChunking()" id="start-chunking-btn">
+                                Start Chunking
+                            </button>
+                        </div>
+
+                        <!-- Chunking Process -->
+                        <div class="config-card" id="chunking-process-section" style="display: none;">
+                            <div class="config-card-header">
+                                <div class="config-icon">⚙️</div>
+                                <div class="config-title">CSV Chunking Process</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Choose a chunking method:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="chunking-method" value="fixed" checked>
+                                        <span>Fixed Size Chunking</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="chunking-method" value="document">
+                                        <span>Document Based Chunking</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="chunking-method" value="semantic">
+                                        <span>Semantic Chunking</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="chunking-method" value="recursive">
+                                        <span>Recursive</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Fixed Size Parameters -->
+                            <div class="chunking-parameters" id="fixed-parameters">
+                                <div class="form-group">
+                                    <label class="form-label">Chunk Size (rows)</label>
+                                    <input type="number" class="form-control" id="fixed-chunk-size" value="100" min="10" max="10000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Overlap (rows)</label>
+                                    <input type="number" class="form-control" id="fixed-overlap" value="0" min="0" max="1000">
+                                </div>
+                            </div>
+
+                            <!-- Document Based Parameters -->
+                            <div class="chunking-parameters" id="document-parameters" style="display: none;">
+                                <div class="form-group">
+                                    <label class="form-label">Select key column for grouping:</label>
+                                    <select class="form-control" id="document-key-column">
+                                        <!-- Options populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Token limit per chunk</label>
+                                    <input type="number" class="form-control" id="document-token-limit" value="2000" min="100" max="50000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Token counting model</label>
+                                    <select class="form-control" id="document-token-model">
+                                        <option value="gpt-4">GPT-4</option>
+                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                        <option value="clk_100_base">CLK-100 Base</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Semantic Parameters -->
+                            <div class="chunking-parameters" id="semantic-parameters" style="display: none;">
+                                <div class="form-group">
+                                    <label class="form-label">Number of clusters</label>
+                                    <input type="number" class="form-control" id="semantic-clusters" value="2" min="2" max="100">
+                                </div>
+                                <div class="range-group">
+                                    <label class="form-label">Threshold frequency</label>
+                                    <input type="range" class="range-slider" id="semantic-threshold" min="0.10" max="0.90" value="0.50" step="0.01" oninput="updateRangeValue('semantic-threshold', 'semantic-threshold-value')">
+                                    <div class="range-labels">
+                                        <span>0.10</span>
+                                        <span class="range-value" id="semantic-threshold-value">0.50</span>
+                                        <span>0.90</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recursive Parameters -->
+                            <div class="chunking-parameters" id="recursive-parameters" style="display: none;">
+                                <div class="form-group">
+                                    <label class="form-label">Chunk Size (rows)</label>
+                                    <input type="number" class="form-control" id="recursive-chunk-size" value="100" min="10" max="10000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Overlap (rows)</label>
+                                    <input type="number" class="form-control" id="recursive-overlap" value="0" min="0" max="1000">
+                                </div>
+                            </div>
+
+                            <button class="btn btn-success" onclick="applyChunkingMethod()">
+                                Apply Chunking Method
+                            </button>
+                        </div>
+
+                        <!-- Chunking Complete -->
+                        <div class="config-card" id="chunking-complete-section" style="display: none;">
+                            <div class="config-card-header">
+                                <div class="config-icon">✅</div>
+                                <div class="config-title">Chunking Complete</div>
+                            </div>
+                            <div class="action-buttons-inline">
+                                <button class="btn btn-success" onclick="downloadChunksAsZip()">
+                                    Download All Chunks as ZIP
+                                </button>
+                                <button class="btn btn-secondary" onclick="startNewChunking()">
+                                    Start New Chunking
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Embeddings Section -->
+                    <div class="embeddings-section" id="embeddings-section" style="display: none;">
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">🧠</div>
+                                <div class="config-title">Generate Embeddings</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Choose an embedding model:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="embedding-model" value="all-MiniLM-L6-v2" checked>
+                                        <span>all-MiniLM-L6-v2 - Default - Fast & Efficient</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="embedding-model" value="BAAI/bge-small-en-v1.5">
+                                        <span>BAAI/bge-small-en-v1.5 - High Accuracy</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Batch size</label>
+                                <select class="form-control" id="embedding-batch-size">
+                                    <option value="32">32</option>
+                                    <option value="64" selected>64</option>
+                                    <option value="128">128</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="generateEmbeddings()">
+                                Generate Embeddings
+                            </button>
+                        </div>
+
+                        <!-- Embeddings Complete -->
+                        <div class="config-card" id="embeddings-complete-section" style="display: none;">
+                            <div class="config-card-header">
+                                <div class="config-icon">✅</div>
+                                <div class="config-title">Embeddings Complete</div>
+                            </div>
+                            <div class="action-buttons-inline">
+                                <button class="btn btn-success" onclick="downloadEmbeddingsAsJson()">
+                                    Download Embeddings as JSON
+                                </button>
+                                <button class="btn btn-secondary" onclick="startNewEmbeddingsProcess()">
+                                    Start New Embeddings Process
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Storing Section -->
+                    <div class="storing-section" id="storing-section" style="display: none;">
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">💾</div>
+                                <div class="config-title">Start Storing Process</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Select model:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="storage-model" value="chroma" checked>
+                                        <span>Chroma DB</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="storage-model" value="faiss">
+                                        <span>FAISS</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Storing Settings</label>
+                                <div class="storing-settings">
+                                    <div class="form-group">
+                                        <label class="form-label">Persist Directory</label>
+                                        <input type="text" class="form-control" id="persist-directory" value=".chroma" placeholder=".chroma">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Collection Name</label>
+                                        <input type="text" class="form-control" id="collection-name" value="csv_chunks" placeholder="csv_chunks">
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="startStoringProcess()">
+                                Start Storing Process
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Retrieval Section -->
+                    <div class="retrieval-section" id="retrieval-section" style="display: none;">
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">🔍</div>
+                                <div class="config-title">Retrieval Testing</div>
+                            </div>
+                            <p class="section-description">Test your vector search with sample queries</p>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Search Configuration</label>
+                                <div class="search-config-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">Similarity Metric:</label>
+                                        <select class="form-control" id="similarity-metric">
+                                            <option value="cosine" selected>Cosine</option>
+                                            <option value="dot">Dot Product</option>
+                                            <option value="euclidean">Euclidean</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Top K Results</label>
+                                        <input type="number" class="form-control" id="top-k-results" value="5" min="1" max="50">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-success" onclick="completeProcess()">
+                                Complete Process
+                            </button>
+                        </div>
+
+                        <!-- Query Interface -->
+                        <div class="config-card" id="query-interface-section" style="display: none;">
+                            <div class="config-card-header">
+                                <div class="config-icon">🔍</div>
+                                <div class="config-title">Query Interface</div>
+                            </div>
+                            <div class="query-bar">
+                                <input type="text" class="query-input" id="deep-config-query-input" placeholder="Enter your search query...">
+                                <div class="query-icon" onclick="performDeepConfigQuery()" id="deep-config-query-icon">🔍</div>
+                            </div>
+                            <div class="query-results" id="deep-config-query-results">
+                                <!-- Query results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                    <div class="config-grid" style="display: none;">
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">🔧</div>
+                                <div class="config-title">Advanced Preprocessing</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Null Handling Strategy</label>
+                                <select class="form-control" id="advanced-null-handling">
+                                    <option value="drop-any">Drop rows with any null</option>
+                                    <option value="drop-all">Drop rows with all nulls</option>
+                                    <option value="interpolate">Interpolate values</option>
+                                    <option value="knn-impute">KNN Imputation</option>
+                                    <option value="custom-fill">Custom fill value</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Custom Fill Value</label>
+                                <input type="text" class="form-control" id="custom-fill-value" placeholder="Enter custom value">
+                            </div>
+                            <div class="checkbox-grid">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="remove-stopwords" checked>
+                                    <label for="remove-stopwords">Remove Stopwords</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="lowercase-text" checked>
+                                    <label for="lowercase-text">Lowercase Text</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="remove-punctuation">
+                                    <label for="remove-punctuation">Remove Punctuation</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="stemming">
+                                    <label for="stemming">Apply Stemming</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="lemmatization">
+                                    <label for="lemmatization">Apply Lemmatization</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="remove-numbers">
+                                    <label for="remove-numbers">Remove Numbers</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">📊</div>
+                                <div class="config-title">Data Normalization</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Normalization Method</label>
+                                <select class="form-control" id="normalization-method">
+                                    <option value="none">No Normalization</option>
+                                    <option value="minmax">Min-Max Scaling</option>
+                                    <option value="zscore">Z-Score Normalization</option>
+                                    <option value="robust">Robust Scaling</option>
+                                    <option value="quantile">Quantile Transformation</option>
+                                </select>
+                            </div>
+                            <div class="range-group">
+                                <label class="form-label">Feature Scaling Range</label>
+                                <input type="range" class="range-slider" id="scale-min" min="0" max="1" value="0" step="0.1" oninput="updateRangeValue('scale-min', 'scale-min-value')">
+                                <div class="range-labels">
+                                    <span>Min: <span class="range-value" id="scale-min-value">0</span></span>
+                                </div>
+                                <input type="range" class="range-slider" id="scale-max" min="1" max="10" value="1" step="0.1" oninput="updateRangeValue('scale-max', 'scale-max-value')">
+                                <div class="range-labels">
+                                    <span>Max: <span class="range-value" id="scale-max-value">1</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">✂️</div>
+                                <div class="config-title">Advanced Chunking</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Chunking Algorithm</label>
+                                <select class="form-control" id="advanced-chunking-method">
+                                    <option value="semantic">Semantic Chunking</option>
+                                    <option value="fixed-size">Fixed Size</option>
+                                    <option value="recursive">Recursive Text Splitter</option>
+                                    <option value="document-aware">Document-aware Chunking</option>
+                                    <option value="agentic">Agentic Chunking</option>
+                                    <option value="sliding-window">Sliding Window</option>
+                                    <option value="sentence-boundary">Sentence Boundary</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Chunk Size (tokens)</label>
+                                <input type="number" class="form-control" id="advanced-chunk-size" value="512" min="64" max="4096">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Chunk Overlap (tokens)</label>
+                                <input type="number" class="form-control" id="advanced-chunk-overlap" value="50" min="0" max="500">
+                            </div>
+                            <div class="range-group">
+                                <label class="form-label">Semantic Similarity Threshold</label>
+                                <input type="range" class="range-slider" id="semantic-threshold" min="0.1" max="1.0" value="0.75" step="0.05" oninput="updateRangeValue('semantic-threshold', 'semantic-threshold-value')">
+                                <div class="range-labels">
+                                    <span>0.1</span>
+                                    <span class="range-value" id="semantic-threshold-value">0.75</span>
+                                    <span>1.0</span>
+                                </div>
+                            </div>
+                            <div class="toggle-group">
+                                <label class="form-label">Preserve Sentence Boundaries</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="preserve-sentences" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">🧠</div>
+                                <div class="config-title">Advanced Embeddings</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Embedding Model</label>
+                                <select class="form-control" id="advanced-embedding-model">
+                                    <option value="text-embedding-3-large">OpenAI text-embedding-3-large</option>
+                                    <option value="text-embedding-3-small">OpenAI text-embedding-3-small</option>
+                                    <option value="text-embedding-ada-002">OpenAI text-embedding-ada-002</option>
+                                    <option value="all-MiniLM-L6-v2">sentence-transformers/all-MiniLM-L6-v2</option>
+                                    <option value="all-mpnet-base-v2">sentence-transformers/all-mpnet-base-v2</option>
+                                    <option value="cohere-embed-english-v3">Cohere Embed English v3</option>
+                                    <option value="cohere-embed-multilingual-v3">Cohere Embed Multilingual v3</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Embedding Dimensions</label>
+                                <input type="number" class="form-control" id="advanced-embedding-dims" value="1536" min="128" max="3072">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Batch Size</label>
+                                <input type="number" class="form-control" id="embedding-batch-size" value="100" min="1" max="1000">
+                            </div>
+                            <div class="range-group">
+                                <label class="form-label">Temperature (for generative embeddings)</label>
+                                <input type="range" class="range-slider" id="embedding-temperature" min="0" max="2" value="1" step="0.1" oninput="updateRangeValue('embedding-temperature', 'temperature-value')">
+                                <div class="range-labels">
+                                    <span>0</span>
+                                    <span class="range-value" id="temperature-value">1</span>
+                                    <span>2</span>
+                                </div>
+                            </div>
+                            <div class="toggle-group">
+                                <label class="form-label">Normalize Embeddings</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="normalize-embeddings" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">💾</div>
+                                <div class="config-title">Storage Configuration</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Vector Database</label>
+                                <select class="form-control" id="advanced-storage-backend">
+                                    <option value="faiss">FAISS</option>
+                                    <option value="chroma">ChromaDB</option>
+                                    <option value="pinecone">Pinecone</option>
+                                    <option value="weaviate">Weaviate</option>
+                                    <option value="qdrant">Qdrant</option>
+                                    <option value="milvus">Milvus</option>
+                                    <option value="redis">Redis Stack</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Index Algorithm</label>
+                                <select class="form-control" id="advanced-index-type">
+                                    <option value="IndexFlatIP">IndexFlatIP (Exact, Inner Product)</option>
+                                    <option value="IndexFlatL2">IndexFlatL2 (Exact, L2 Distance)</option>
+                                    <option value="IndexIVFFlat">IndexIVFFlat (Approximate)</option>
+                                    <option value="IndexIVFPQ">IndexIVFPQ (Compressed)</option>
+                                    <option value="IndexHNSW">IndexHNSW (Graph-based)</option>
+                                    <option value="IndexLSH">IndexLSH (Locality-Sensitive Hashing)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Number of Clusters (for IVF)</label>
+                                <input type="number" class="form-control" id="num-clusters" value="100" min="10" max="10000">
+                            </div>
+                            <div class="toggle-group">
+                                <label class="form-label">Enable GPU Acceleration</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="gpu-acceleration">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">🔍</div>
+                                <div class="config-title">Retrieval Configuration</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Similarity Metric</label>
+                                <select class="form-control" id="similarity-metric">
+                                    <option value="cosine">Cosine Similarity</option>
+                                    <option value="dot_product">Dot Product</option>
+                                    <option value="euclidean">Euclidean Distance</option>
+                                    <option value="manhattan">Manhattan Distance</option>
+                                    <option value="jaccard">Jaccard Similarity</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Top-K Results</label>
+                                <input type="number" class="form-control" id="top-k-results" value="10" min="1" max="1000">
+                            </div>
+                            <div class="range-group">
+                                <label class="form-label">Score Threshold</label>
+                                <input type="range" class="range-slider" id="score-threshold" min="0" max="1" value="0.7" step="0.05" oninput="updateRangeValue('score-threshold', 'score-threshold-value')">
+                                <div class="range-labels">
+                                    <span>0</span>
+                                    <span class="range-value" id="score-threshold-value">0.7</span>
+                                    <span>1</span>
+                                </div>
+                            </div>
+                            <div class="toggle-group">
+                                <label class="form-label">Enable Reranking</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enable-reranking">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Reranking Model</label>
+                                <select class="form-control" id="reranking-model">
+                                    <option value="none">None</option>
+                                    <option value="cross-encoder">Cross-Encoder</option>
+                                    <option value="cohere-rerank">Cohere Rerank</option>
+                                    <option value="sentence-bert-rerank">SentenceBERT Rerank</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="config-card">
+                            <div class="config-card-header">
+                                <div class="config-icon">⚡</div>
+                                <div class="config-title">Performance Tuning</div>
+                            </div>
+                            <div class="toggle-group">
+                                <label class="form-label">Parallel Processing</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="parallel-processing" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Number of Workers</label>
+                                <input type="number" class="form-control" id="num-workers" value="4" min="1" max="32">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Memory Limit (GB)</label>
+                                <input type="number" class="form-control" id="memory-limit" value="8" min="1" max="64">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Optimization Priority</label>
+                                <select class="form-control" id="optimization-priority">
+                                    <option value="balanced">Balanced</option>
+                                    <option value="speed">Speed Priority</option>
+                                    <option value="memory">Memory Priority</option>
+                                    <option value="accuracy">Accuracy Priority</option>
+                                </select>
+                            </div>
+                            <div class="toggle-group">
+                                <label class="form-label">Enable Caching</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enable-caching" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="range-group">
+                                <label class="form-label">Cache Size (MB)</label>
+                                <input type="range" class="range-slider" id="cache-size" min="100" max="10000" value="1000" step="100" oninput="updateRangeValue('cache-size', 'cache-size-value')">
+                                <div class="range-labels">
+                                    <span>100MB</span>
+                                    <span class="range-value" id="cache-size-value">1000MB</span>
+                                    <span>10GB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Section -->
+            <div class="search-section" id="search-section">
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="search-input" placeholder="Enter your search query...">
+                    <div class="search-icon" onclick="performSearch()" id="search-icon">🔍</div>
+                </div>
+                <div class="search-results" id="search-results">
+                    <!-- Search results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Action Section -->
+            <div class="action-section">
+                <div class="processing-indicator" id="processing-indicator">
+                    <div class="spinner"></div>
+                    <span id="processing-text">Processing...</span>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="resetConfiguration()" id="reset-btn">
+                        Reset
+                    </button>
+                    <button class="btn btn-secondary" onclick="saveConfiguration()" id="save-btn">
+                        Save Config
+                    </button>
+                    <button class="btn btn-success" onclick="startProcessing()" id="process-btn">
+                        Start Processing
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- End of Processing Pipeline Section -->
+        </div>
+
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>

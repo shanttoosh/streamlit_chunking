@@ -363,9 +363,7 @@ with st.sidebar:
             }
             
             if db_mode == "Fast (Auto)":
-                if st.button("📥 Run Fast Mode", key="db_btn_import_one"):
-                    res = db_import_one_api(base_db_payload)
-                    if "error" in res:
+                if res["error" in res:
                         st.error(res["error"])
                     else:
                         st.success("Imported and processed via Fast pipeline")

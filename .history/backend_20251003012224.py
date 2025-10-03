@@ -141,320 +141,6 @@ def preprocess_advanced(df: pd.DataFrame,
     return df
 
 # -----------------------------
-# 🔹 NEW ENHANCED PREPROCESSING SYSTEM (3-TIER)
-# -----------------------------
-
-# Initialize spaCy model (load once)
-try:
-    nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
-except OSError:
-    logger.warning("spaCy model 'en_core_web_sm' not found. Please install: python -m spacy download en_core_web_sm")
-    nlp = None
-
-# Initialize Porter Stemmer
-stemmer = PorterStemmer()
-
-def detect_encoding(file_path):
-    """Detect file encoding using chardet"""
-    try:
-        with open(file_path, 'rb') as f:
-            raw_data = f.read()
-            result = chardet.detect(raw_data)
-            return result.get('encoding', 'utf-8')
-    except:
-        return 'utf-8'
-
-def remove_html_tags(text):
-    """Remove HTML tags from text"""
-    if not isinstance(text, str):
-        return text
-    try:
-        return BeautifulSoup(text, "lxml").get_text(separator=' ')
-    except:
-        return re.sub('<[^<]+?>', ' ', text)
-
-def validate_and_normalize_headers(df: pd.DataFrame) -> pd.DataFrame:
-    """Validate and normalize column headers"""
-    new_columns = []
-    for i, col in enumerate(df.columns):
-        if pd.isna(col) or str(col).strip() == "":
-            new_col = f"column_{i+1}"
-        else:
-            new_col = str(col).strip().lower()
-        new_columns.append(new_col)
-    df.columns = new_columns
-    return df
-
-def normalize_text_columns(df: pd.DataFrame):
-    """Apply text normalization to object columns"""
-    text_cols = df.select_dtypes(include=['object']).columns
-    for col in text_cols:
-        df[col] = df[col].fillna('')
-        df[col] = df[col].map(remove_html_tags)
-        df[col] = df[col].map(lambda x: x.lower() if isinstance(x, str) else x)
-        df[col] = df[col].map(lambda x: x.strip() if isinstance(x, str) else x)
-        df[col] = df[col].map(lambda x: re.sub(r'\s+', ' ', x) if isinstance(x, str) else x)
-    return df
-
-def create_metadata(df: pd.DataFrame, data_source_info: dict) -> dict:
-    """Create comprehensive metadata for processed data"""
-    metadata = {
-        "data_source": data_source_info,
-        "processing_stats": {
-            "preprocessing_time": time.time(),
-            "rows_processed": df.shape[0],
-            "columns_processed": df.shape[1],
-            "memory_usage_mb": df.memory_usage(deep=True).sum() / 1024**2
-        },
-        "column_info": {},
-        "data_previews": {
-            "first_5_rows": df.head(5).to_dict('records'),
-            "last_5_rows": df.tail(5).to_dict('records')
-        }
-    }
-    
-    for col in df.columns:
-        metadata["column_info"][col] = {
-            "dtype": str(df[col].dtype),
-            "null_count": int(df[col].isnull().sum()),
-            "null_percentage": float((df[col].isnull().sum() / len(df)) * 100),
-            "unique_values": int(df[col].nunique()),
-            "sample_values": df[col].dropna().head(5).tolist() if df[col].dropna().shape[0] > 0 else []
-        }
-    
-    # Add data quality metrics
-    metadata["data_quality"] = {
-        "total_null_count": int(df.isnull().sum().sum()),
-        "total_null_percentage": float((df.isnull().sum().sum() / (df.shape[0] * df.shape[1])) * 100),
-        "duplicate_rows": int(df.duplicated().sum()),
-        "numeric_columns": list(df.select_dtypes(include=[np.number]).columns),
-        "text_columns": list(df.select_dtypes(include=['object']).columns)
-    }
-    
-    return metadata
-
-def create_csv_data_source_info(filename: str, file_size: int, upload_time: str) -> dict:
-    """Create CSV data source metadata"""
-    return {
-        "source_type": "csv",
-        "filename": filename,
-        "file_size_bytes": file_size,
-        "upload_time": upload_time,
-        "location": "local_upload"
-    }
-
-def create_db_data_source_info(db_type: str, host: str, port: int, database: str, table_name: str, import_time: str) -> dict:
-    """Create database data source metadata (excluding credentials)"""
-    return {
-        "source_type": "database",
-        "db_type": db_type,
-        "host": host,
-        "port": port,
-        "database": database,
-        "table_name": table_name,
-        "import_time": import_time,
-        "location": "database_connection"
-    }
-
-def preprocess_fast_mode(df: pd.DataFrame, data_source_info: dict):
-    """Fast Mode: Automatic default preprocessing"""
-    logger.info("Starting Fast Mode preprocessing...")
-    start_time = time.time()
-    
-    original_shape = df.shape
-    
-    # Default preprocessing steps
-    df = validate_and_normalize_headers(df)
-    df = normalize_text_columns(df)
-    
-    # Auto drop rows with all null values
-    df = df.dropna(how='all')
-    
-    elapsed_time = time.time() - start_time
-    
-    metadata = create_metadata(df, data_source_info)
-    metadata["processing_stats"]["preprocessing_mode"] = "fast"
-    metadata["processing_stats"]["preprocessing_time"] = elapsed_time
-    metadata["processing_stats"]["rows_dropped"] = original_shape[0] - df.shape[0]
-    
-    logger.info(f"Fast Mode preprocessing completed in {elapsed_time:.2f}s")
-    return df, metadata
-
-def create_null_preview_table(df: pd.DataFrame) -> dict:
-    """Create null analysis preview table for Config-1 Mode"""
-    preview_data = []
-    for col in df.columns:
-        null_count = df[col].isnull().sum()
-        null_percentage = (null_count / len(df)) * 100
-        preview_data.append({
-            "column_name": col,
-            "null_count": int(null_count),
-            "null_percentage": round(null_percentage, 2)
-        })
-    
-    # Sort by null percentage descending
-    preview_data.sort(key=lambda x: x["null_percentage"], reverse=True)
-    
-    return {
-        "columns": ["column_name", "null_count", "null_percentage"],
-        "data": preview_data[:10],  # Top 10 columns with most nulls
-        "total_rows": len(df)
-    }
-
-def handle_nulls_by_column(df: pd.DataFrame, null_handling_config: dict):
-    """Apply null handling configuration per column"""
-    df = df.copy()
-    
-    for col, config in null_handling_config.items():
-        if config["method"] == "skip":
-            continue
-        elif config["method"] == "drop":
-            df[col] = df[col].dropna()
-        elif config["method"] == "fill":
-            if config["fill_method"] == "median" and pd.api.types.is_numeric_dtype(df[col]):
-                fill_value = df[col].median()
-            elif config["fill_method"] == "mode":
-                fill_value = df[col].mode().iloc[0] if not df[col].mode().empty else ""
-            elif config["fill_method"] == "mean" and pd.api.types.is_numeric_dtype(df[col]):
-                fill_value = df[col].mean()
-            elif config["fill_method"] == "custom":
-                fill_value = config["custom_value"]
-            else:
-                fill_value = ""
-            
-            df[col] = df[col].fillna(fill_value)
-    
-    return df
-
-def preprocess_config1_mode(df: pd.DataFrame, data_source_info: dict, null_handling_config: dict = None):
-    """Config-1 Mode: Default preprocessing + null handling with preview"""
-    logger.info("Starting Config-1 Mode preprocessing...")
-    start_time = time.time()
-    
-    # Default preprocessing first
-    df = validate_and_normalize_headers(df)
-    df = normalize_text_columns(df)
-    
-    # Create null preview for analysis
-    null_preview = create_null_preview_table(df)
-    
-    # Apply null handling if configuration provided
-    if null_handling_config:
-        original_nulls = df.isnull().sum().sum()
-        df = handle_nulls_by_column(df, null_handling_config)
-        handled_nulls = original_nulls - df.isnull().sum().sum()
-        logger.info(f"Handled {handled_nulls} null values")
-    
-    elapsed_time = time.time() - start_time
-    
-    metadata = create_metadata(df, data_source_info)
-    metadata["processing_stats"]["preprocessing_mode"] = "config1"
-    metadata["processing_stats"]["preprocessing_time"] = elapsed_time
-    metadata["null_preview"] = null_preview
-    
-    logger.info(f"Config-1 Mode preprocessing completed in {elapsed_time:.2f}s")
-    return df, metadata
-
-def create_dtype_preview_table(df: pd.DataFrame) -> dict:
-    """Create data type analysis preview table for Deep Mode"""
-    preview_data = []
-    for col in df.columns:
-        preview_data.append({
-            "column_name": col,
-            "current_dtype": str(df[col].dtype),
-            "sample_values": df[col].dropna().head(3).tolist()
-        })
-    
-    return {
-        "columns": ["column_name", "current_dtype", "sample_values"],
-        "data": preview_data[:10],  # Top 10 columns
-        "total_rows": len(df)
-    }
-
-def apply_data_type_conversions(df: pd.DataFrame, dtype_config: dict):
-    """Apply data type conversions per column configuration"""
-    df = df.copy()
-    
-    for col, config in dtype_config.items():
-        if config["target_dtype"] == "skip":
-            continue
-        
-        try:
-            if config["target_dtype"] == "numeric":
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-            elif config["target_dtype"] == "datetime":
-                df[col] = pd.to_datetime(df[col], errors='coerce')
-            elif config["target_dtype"] == "bool":
-                df[col] = df[col].astype(bool)
-            elif config["target_dtype"] == "object":
-                df[col] = df[col].astype(str)
-        except Exception as e:
-            logger.warning(f"Failed to convert column {col} to {config['target_dtype']}: {e}")
-    
-    return df
-
-def remove_duplicates_config(df: pd.DataFrame, duplicate_config: dict):
-    """Handle duplicate removal based on configuration"""
-    if duplicate_config["method"] == "remove":
-        return df.drop_duplicates(subset=duplicate_config.get("columns", None))
-    return df
-
-def apply_text_processing(df: pd.DataFrame, text_config: dict):
-    """Apply text processing (stopwords, normalization, stemming, lemmatization)"""
-    if not text_config.get("enabled", False):
-        return df
-    
-    df = df.copy()
-    text_cols = df.select_dtypes(include=['object']).columns
-    
-    for col in text_cols:
-        if nlp and text_config.get("lemmatization", False):
-            df[col] = df[col].apply(lambda x: " ".join([token.lemma_ for token in nlp(str(x))]))
-        elif text_config.get("stemming", False):
-            df[col] = df[col].apply(lambda x: " ".join([stemmer.stem(word) for word in word_tokenize(str(x))]))
-    
-    return df
-
-def preprocess_deep_mode(df: pd.DataFrame, data_source_info: dict, 
-                        dtype_config: dict = None, null_handling_config: dict = None,
-                        duplicate_config: dict = None, text_config: dict = None):
-    """Deep Mode: Full customization preprocessing with previews"""
-    logger.info("Starting Deep Mode preprocessing...")
-    start_time = time.time()
-    
-    # Default preprocessing first
-    df = validate_and_normalize_headers(df)
-    df = normalize_text_columns(df)
-    
-    # Create previews
-    dtype_preview = create_dtype_preview_table(df)
-    null_preview = create_null_preview_table(df)
-    
-    # Apply configurations
-    if dtype_config:
-        df = apply_data_type_conversions(df, dtype_config)
-    
-    if null_handling_config:
-        df = handle_nulls_by_column(df, null_handling_config)
-    
-    if duplicate_config:
-        df = remove_duplicates_config(df, duplicate_config)
-    
-    if text_config:
-        df = apply_text_processing(df, text_config)
-    
-    elapsed_time = time.time() - start_time
-    
-    metadata = create_metadata(df, data_source_info)
-    metadata["processing_stats"]["preprocessing_mode"] = "deep"
-    metadata["processing_stats"]["preprocessing_time"] = elapsed_time
-    metadata["dtype_preview"] = dtype_preview
-    metadata["null_preview"] = null_preview
-    
-    logger.info(f"Deep Mode preprocessing completed in {elapsed_time:.2f}s")
-    return df, metadata
-
-# -----------------------------
 # 🔹 Chunking
 # -----------------------------
 def chunk_fixed(df: pd.DataFrame, chunk_size=400, overlap=50):
@@ -746,12 +432,10 @@ def run_fast_pipeline(df, db_type="sqlite", db_config=None, file_info=None):
     global current_model, current_store_info, current_chunks, current_embeddings, current_df
     
     current_df = df.copy()
-    
-    # Enhanced preprocessing for Fast Mode
-    data_source_info = file_info or {}
-    df1, metadata = preprocess_fast_mode(df, data_source_info)
     set_file_info(file_info)
     
+    # Auto preprocess
+    df1 = preprocess_basic(df, null_handling="drop")
     # Default: semantic clustering
     chunks = chunk_semantic_cluster(df1)
     model, embs = embed_texts(chunks)
@@ -767,21 +451,16 @@ def run_fast_pipeline(df, db_type="sqlite", db_config=None, file_info=None):
         "rows": len(df1), 
         "chunks": len(chunks), 
         "stored": store["type"],
-        "retrieval_ready": True,
-        "metadata": metadata
+        "retrieval_ready": True
     }
 
 def run_config1_pipeline(df, null_handling, fill_value, chunk_method,
-                         chunk_size, overlap, model_choice, storage_choice, db_config=None, file_info=None,
-                         null_handling_config=None):
+                         chunk_size, overlap, model_choice, storage_choice, db_config=None, file_info=None):
     global current_model, current_store_info, current_chunks, current_embeddings, current_df
     
     current_df = df.copy()
-    
-    # Enhanced preprocessing for Config-1 Mode
-    data_source_info = file_info or {}
-    df1, metadata = preprocess_config1_mode(df, data_source_info, null_handling_config)
     set_file_info(file_info)
+    df1 = preprocess_basic(df, null_handling, fill_value)
 
     if chunk_method == "fixed":
         chunks = chunk_fixed(df1, chunk_size, overlap)
@@ -810,23 +489,18 @@ def run_config1_pipeline(df, null_handling, fill_value, chunk_method,
         "rows": len(df1), 
         "chunks": len(chunks), 
         "stored": store["type"],
-        "retrieval_ready": True,
-        "metadata": metadata
+        "retrieval_ready": True
     }
 
 def run_deep_pipeline(df, null_handling, fill_value, remove_stopwords,
                       lowercase, stemming, lemmatization,
-                      chunk_method, chunk_size, overlap, model_choice, storage_choice, db_config=None, file_info=None,
-                      dtype_config=None, null_handling_config=None, duplicate_config=None, text_config=None):
+                      chunk_method, chunk_size, overlap, model_choice, storage_choice, db_config=None, file_info=None):
     global current_model, current_store_info, current_chunks, current_embeddings, current_df
     
     current_df = df.copy()
-    
-    # Enhanced preprocessing for Deep Mode
-    data_source_info = file_info or {}
-    df1, metadata = preprocess_deep_mode(df, data_source_info, dtype_config, 
-                                        null_handling_config, duplicate_config, text_config)
     set_file_info(file_info)
+    df1 = preprocess_advanced(df, null_handling, fill_value,
+                              remove_stopwords, lowercase, stemming, lemmatization)
 
     if chunk_method == "fixed":
         chunks = chunk_fixed(df1, chunk_size, overlap)
@@ -855,6 +529,5 @@ def run_deep_pipeline(df, null_handling, fill_value, remove_stopwords,
         "rows": len(df1), 
         "chunks": len(chunks), 
         "stored": store["type"],
-        "retrieval_ready": True,
-        "metadata": metadata
+        "retrieval_ready": True
     }        

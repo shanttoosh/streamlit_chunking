@@ -310,15 +310,14 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Database Integration with all modes
-    with st.expander("🗄️ Database Integration"):
+    # Minimal DB single-table test (for understanding workflow)
+    with st.expander("🗄️ Database (single-table test)"):
         db_type = st.selectbox("Type", ["mysql", "postgresql"], key="db_type_test")
         host = st.text_input("Host", "localhost", key="db_host_test")
         port = st.number_input("Port", 1, 65535, 3306 if db_type == "mysql" else 5432, key="db_port_test")
         username = st.text_input("Username", key="db_user_test")
         password = st.text_input("Password", type="password", key="db_pass_test")
         database = st.text_input("Database", key="db_name_test")
-        
         if st.button("🔌 Test", key="db_btn_test_conn"):
             res = db_test_connection_api({
                 "db_type": db_type,
@@ -329,7 +328,6 @@ with st.sidebar:
                 "database": database,
             })
             st.write(res)
-            
         if st.button("📋 Tables", key="db_btn_list_tables"):
             res = db_list_tables_api({
                 "db_type": db_type,
@@ -341,105 +339,24 @@ with st.sidebar:
             })
             st.session_state["db_tables_test"] = res.get("tables", [])
             st.write(res)
-            
         tables = st.session_state.get("db_tables_test", [])
         if tables:
             table_name = st.selectbox("Table", tables, key="db_table_select_test")
-            
-            # Processing mode selection
-            db_mode = st.selectbox("Processing Mode", 
-                                 ["Fast (Auto)", "Config-1 (Customizable)", "Deep (Advanced)"], 
-                                 key="db_mode_select")
-            
-            # Base payload for all modes
-            base_db_payload = {
-                "db_type": db_type,
-                "host": host,
-                "port": port,
-                "username": username,
-                "password": password,
-                "database": database,
-                "table_name": table_name,
-            }
-            
-            if db_mode == "Fast (Auto)":
-                if st.button("📥 Run Fast Mode", key="db_btn_import_one"):
-                    res = db_import_one_api(base_db_payload)
-                    if "error" in res:
-                        st.error(res["error"])
-                    else:
-                        st.success("Imported and processed via Fast pipeline")
-                        st.session_state.api_results = res
-                        
-            elif db_mode == "Config-1 (Customizable)":
-                st.markdown("**Config-1 Settings:**")
-                col1, col2 = st.columns(2)
-                with col1:
-                    db_null_handling = st.selectbox("Null Handling", ["keep", "drop", "fill"], key="db_null_handling", index=0)
-                    db_chunk_method = st.selectbox("Chunk Method", ["fixed", "recursive", "semantic", "document"], key="db_chunk_method", index=1)
-                    db_model_choice = st.selectbox("Model", ["all-MiniLM-L6-v2", "all-MiniLM-L12-v2", "paraphrase-MiniLM-L6-v2"], key="db_model_choice", index=0)
-                with col2:
-                    db_fill_value = st.text_input("Fill Value", "Unknown", key="db_fill_value")
-                    db_chunk_size = st.number_input("Chunk Size", 100, 2000, 400, key="db_chunk_size")
-                    db_overlap = st.number_input("Overlap", 0, 200, 50, key="db_overlap")
-                    db_storage_choice = st.selectbox("Storage", ["faiss", "chromadb"], key="db_storage_choice", index=0)
-                
-                if st.button("📥 Run Config-1 Mode", key="db_btn_config1"):
-                    config1_payload = {
-                        **base_db_payload,
-                        "null_handling": db_null_handling,
-                        "fill_value": db_fill_value,
-                        "chunk_method": db_chunk_method,
-                        "chunk_size": db_chunk_size,
-                        "overlap": db_overlap,
-                        "model_choice": db_model_choice,
-                        "storage_choice": db_storage_choice,
-                    }
-                    res = db_run_config1_api(config1_payload)
-                    if "error" in res:
-                        st.error(res["error"])
-                    else:
-                        st.success("Imported and processed via Config-1 pipeline")
-                        st.session_state.api_results = res
-                        
-            elif db_mode == "Deep (Advanced)":
-                st.markdown("**Deep Mode Settings:**")
-                col1, col2 = st.columns(2)
-                with col1:
-                    db_null_handling = st.selectbox("Null Handling", ["keep", "drop", "fill"], key="db_deep_null_handling", index=0)
-                    db_chunk_method = st.selectbox("Chunk Method", ["fixed", "recursive", "semantic", "document"], key="db_deep_chunk_method", index=1)
-                    db_model_choice = st.selectbox("Model", ["all-MiniLM-L6-v2", "all-MiniLM-L12-v2", "paraphrase-MiniLM-L6-v2", "sentence-transformers/all-mpnet-base-v2"], key="db_deep_model_choice", index=0)
-                    db_remove_stopwords = st.checkbox("Remove Stopwords", key="db_deep_stopwords")
-                    db_lowercase = st.checkbox("Lowercase", value=True, key="db_deep_lowercase")
-                with col2:
-                    db_fill_value = st.text_input("Fill Value", "Unknown", key="db_deep_fill_value")
-                    db_chunk_size = st.number_input("Chunk Size", 100, 2000, 400, key="db_deep_chunk_size")
-                    db_overlap = st.number_input("Overlap", 0, 200, 50, key="db_deep_overlap")
-                    db_storage_choice = st.selectbox("Storage", ["faiss", "chromadb"], key="db_deep_storage_choice", index=0)
-                    db_stemming = st.checkbox("Stemming", key="db_deep_stemming")
-                    db_lemmatization = st.checkbox("Lemmatization", key="db_deep_lemmatization")
-                
-                if st.button("📥 Run Deep Mode", key="db_btn_deep"):
-                    deep_payload = {
-                        **base_db_payload,
-                        "null_handling": db_null_handling,
-                        "fill_value": db_fill_value,
-                        "remove_stopwords": db_remove_stopwords,
-                        "lowercase": db_lowercase,
-                        "stemming": db_stemming,
-                        "lemmatization": db_lemmatization,
-                        "chunk_method": db_chunk_method,
-                        "chunk_size": db_chunk_size,
-                        "overlap": db_overlap,
-                        "model_choice": db_model_choice,
-                        "storage_choice": db_storage_choice,
-                    }
-                    res = db_run_deep_api(deep_payload)
-                    if "error" in res:
-                        st.error(res["error"])
-                    else:
-                        st.success("Imported and processed via Deep pipeline")
-                        st.session_state.api_results = res
+            if st.button("📥 Import One (Fast Mode)", key="db_btn_import_one"):
+                res = db_import_one_api({
+                    "db_type": db_type,
+                    "host": host,
+                    "port": port,
+                    "username": username,
+                    "password": password,
+                    "database": database,
+                    "table_name": table_name,
+                })
+                if "error" in res:
+                    st.error(res["error"])
+                else:
+                    st.success("Imported and processed via Fast pipeline")
+                    st.session_state.api_results = res
     
     # Process steps display
     st.markdown("### ⚙️ Processing Steps")

@@ -175,17 +175,16 @@ async def db_run_deep(
         df = import_table_to_dataframe(conn, table_name)
         conn.close()
         
-        # Create enhanced file info for database source
-        from backend import create_db_data_source_info
-        import datetime
-        data_source_info = create_db_data_source_info(
-            db_type, host, port, database, table_name, 
-            datetime.datetime.now().isoformat()
-        )
+        file_info = {
+            "source": f"db:{db_type}:{table_name}",
+            "table": table_name,
+            "db_type": db_type,
+            "import_time": pd.Timestamp.now().isoformat()
+        }
         
         result = run_deep_pipeline(df, null_handling, fill_value, remove_stopwords,
                                  lowercase, stemming, lemmatization, chunk_method,
-                                 chunk_size, overlap, model_choice, storage_choice, file_info=data_source_info)
+                                 chunk_size, overlap, model_choice, storage_choice, file_info=file_info)
         return {"mode": "deep", "summary": result}
     except Exception as e:
         return {"error": str(e)}
@@ -199,14 +198,13 @@ async def run_fast(file: UploadFile = File(...), db_type: str = Form("sqlite")):
     contents = await file.read()
     df = pd.read_csv(io.BytesIO(contents))
     
-    # Create enhanced file info for CSV source
-    from backend import create_csv_data_source_info
-    import datetime
-    data_source_info = create_csv_data_source_info(
-        file.filename, len(contents), datetime.datetime.now().isoformat()
-    )
+    file_info = {
+        "filename": file.filename,
+        "file_size": len(contents),
+        "upload_time": pd.Timestamp.now().isoformat()
+    }
     
-    result = run_fast_pipeline(df, db_type, file_info=data_source_info)
+    result = run_fast_pipeline(df, db_type, file_info=file_info)
     return {"mode": "fast", "summary": result}
 
 # ---------------------------
@@ -226,15 +224,14 @@ async def run_config1(
     contents = await file.read()
     df = pd.read_csv(io.BytesIO(contents))
     
-    # Create enhanced file info for CSV source
-    from backend import create_csv_data_source_info
-    import datetime
-    data_source_info = create_csv_data_source_info(
-        file.filename, len(contents), datetime.datetime.now().isoformat()
-    )
+    file_info = {
+        "filename": file.filename,
+        "file_size": len(contents),
+        "upload_time": pd.Timestamp.now().isoformat()
+    }
     
     result = run_config1_pipeline(df, null_handling, fill_value, chunk_method,
-                                  chunk_size, overlap, model_choice, storage_choice, file_info=data_source_info)
+                                  chunk_size, overlap, model_choice, storage_choice, file_info=file_info)
     return {"mode": "config1", "summary": result}
 
 # ---------------------------
@@ -258,79 +255,16 @@ async def run_deep(
     contents = await file.read()
     df = pd.read_csv(io.BytesIO(contents))
     
-    # Create enhanced file info for CSV source
-    from backend import create_csv_data_source_info
-    import datetime
-    data_source_info = create_csv_data_source_info(
-        file.filename, len(contents), datetime.datetime.now().isoformat()
-    )
+    file_info = {
+        "filename": file.filename,
+        "file_size": len(contents),
+        "upload_time": pd.Timestamp.now().isoformat()
+    }
     
     result = run_deep_pipeline(df, null_handling, fill_value, remove_stopwords,
                                lowercase, stemming, lemmatization, chunk_method,
-                               chunk_size, overlap, model_choice, storage_choice, file_info=data_source_info)
+                               chunk_size, overlap, model_choice, storage_choice, file_info=file_info)
     return {"mode": "deep", "summary": result}
-
-# ---------------------------
-# PREVIEW ENDPOINTS FOR UI
-# ---------------------------
-@app.post("/preview/data")
-async def preview_data(
-    db_type: str = Form(None),
-    host: str = Form(None),
-    port: int = Form(None),
-    username: str = Form(None),
-    password: str = Form(None),
-    database: str = Form(None),
-    table_name: str = Form(None),
-    file: UploadFile = File(None)
-):
-    """Get data preview for preprocessing UI"""
-    try:
-        if file:  # CSV file preview
-            contents = await file.read()
-            df = pd.read_csv(io.BytesIO(contents))
-            source_type = "csv"
-            source_info = {"filename": file.filename}
-        elif table_name:  # Database table preview
-            if db_type == "mysql":
-                conn = connect_mysql(host, port, username, password, database)
-            elif db_type == "postgresql":
-                conn = connect_postgresql(host, port, username, password, database)
-            else:
-                return {"error": "Unsupported db_type"}
-            df = import_table_to_dataframe(conn, table_name)
-            conn.close()
-            source_type = "database"
-            source_info = {"table": table_name, "db_type": db_type}
-        else:
-            return {"error": "Either file or table_name must be provided"}
-        
-        # Create preview data
-        from backend import (
-            create_dtype_preview_table, 
-            create_null_preview_table,
-            validate_and_normalize_headers,
-            normalize_text_columns
-        )
-        
-        # Apply basic preprocessing for preview
-        df_preview = validate_and_normalize_headers(df.copy())
-        df_preview = normalize_text_columns(df_preview)
-        
-        # Generate previews
-        dtype_preview = create_dtype_preview_table(df_preview)
-        null_preview = create_null_preview_table(df_preview)
-        
-        return {
-            "source_type": source_type,
-            "source_info": source_info,
-            "dtype_preview": dtype_preview,
-            "null_preview": null_preview,
-            "total_rows": len(df_preview),
-            "total_columns": len(df_preview.columns)
-        }
-    except Exception as e:
-        return {"error": str(e)}
 
 # ---------------------------
 # RETRIEVAL ENDPOINTS

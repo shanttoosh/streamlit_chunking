@@ -137,7 +137,7 @@ def preprocess_advanced(df: pd.DataFrame,
 
         df[col] = series
 
-    logger.info(f"Advanced preprocessing completed in {time.time() - start_time:.2f}s")
+    logger.info(f"Advanced preprocessing completed in {time.time() - start_time:.2f:s}s")
     return df
 
 # -----------------------------
@@ -206,11 +206,7 @@ def create_metadata(df: pd.DataFrame, data_source_info: dict) -> dict:
             "columns_processed": df.shape[1],
             "memory_usage_mb": df.memory_usage(deep=True).sum() / 1024**2
         },
-        "column_info": {},
-        "data_previews": {
-            "first_5_rows": df.head(5).to_dict('records'),
-            "last_5_rows": df.tail(5).to_dict('records')
-        }
+        "column_info": {}
     }
     
     for col in df.columns:
@@ -218,43 +214,10 @@ def create_metadata(df: pd.DataFrame, data_source_info: dict) -> dict:
             "dtype": str(df[col].dtype),
             "null_count": int(df[col].isnull().sum()),
             "null_percentage": float((df[col].isnull().sum() / len(df)) * 100),
-            "unique_values": int(df[col].nunique()),
-            "sample_values": df[col].dropna().head(5).tolist() if df[col].dropna().shape[0] > 0 else []
+            "unique_values": int(df[col].nunique())
         }
     
-    # Add data quality metrics
-    metadata["data_quality"] = {
-        "total_null_count": int(df.isnull().sum().sum()),
-        "total_null_percentage": float((df.isnull().sum().sum() / (df.shape[0] * df.shape[1])) * 100),
-        "duplicate_rows": int(df.duplicated().sum()),
-        "numeric_columns": list(df.select_dtypes(include=[np.number]).columns),
-        "text_columns": list(df.select_dtypes(include=['object']).columns)
-    }
-    
     return metadata
-
-def create_csv_data_source_info(filename: str, file_size: int, upload_time: str) -> dict:
-    """Create CSV data source metadata"""
-    return {
-        "source_type": "csv",
-        "filename": filename,
-        "file_size_bytes": file_size,
-        "upload_time": upload_time,
-        "location": "local_upload"
-    }
-
-def create_db_data_source_info(db_type: str, host: str, port: int, database: str, table_name: str, import_time: str) -> dict:
-    """Create database data source metadata (excluding credentials)"""
-    return {
-        "source_type": "database",
-        "db_type": db_type,
-        "host": host,
-        "port": port,
-        "database": database,
-        "table_name": table_name,
-        "import_time": import_time,
-        "location": "database_connection"
-    }
 
 def preprocess_fast_mode(df: pd.DataFrame, data_source_info: dict):
     """Fast Mode: Automatic default preprocessing"""
@@ -746,12 +709,10 @@ def run_fast_pipeline(df, db_type="sqlite", db_config=None, file_info=None):
     global current_model, current_store_info, current_chunks, current_embeddings, current_df
     
     current_df = df.copy()
-    
-    # Enhanced preprocessing for Fast Mode
-    data_source_info = file_info or {}
-    df1, metadata = preprocess_fast_mode(df, data_source_info)
     set_file_info(file_info)
     
+    # Auto preprocess
+    df1 = preprocess_basic(df, null_handling="drop")
     # Default: semantic clustering
     chunks = chunk_semantic_cluster(df1)
     model, embs = embed_texts(chunks)
@@ -767,21 +728,16 @@ def run_fast_pipeline(df, db_type="sqlite", db_config=None, file_info=None):
         "rows": len(df1), 
         "chunks": len(chunks), 
         "stored": store["type"],
-        "retrieval_ready": True,
-        "metadata": metadata
+        "retrieval_ready": True
     }
 
 def run_config1_pipeline(df, null_handling, fill_value, chunk_method,
-                         chunk_size, overlap, model_choice, storage_choice, db_config=None, file_info=None,
-                         null_handling_config=None):
+                         chunk_size, overlap, model_choice, storage_choice, db_config=None, file_info=None):
     global current_model, current_store_info, current_chunks, current_embeddings, current_df
     
     current_df = df.copy()
-    
-    # Enhanced preprocessing for Config-1 Mode
-    data_source_info = file_info or {}
-    df1, metadata = preprocess_config1_mode(df, data_source_info, null_handling_config)
     set_file_info(file_info)
+    df1 = preprocess_basic(df, null_handling, fill_value)
 
     if chunk_method == "fixed":
         chunks = chunk_fixed(df1, chunk_size, overlap)
@@ -810,23 +766,18 @@ def run_config1_pipeline(df, null_handling, fill_value, chunk_method,
         "rows": len(df1), 
         "chunks": len(chunks), 
         "stored": store["type"],
-        "retrieval_ready": True,
-        "metadata": metadata
+        "retrieval_ready": True
     }
 
 def run_deep_pipeline(df, null_handling, fill_value, remove_stopwords,
                       lowercase, stemming, lemmatization,
-                      chunk_method, chunk_size, overlap, model_choice, storage_choice, db_config=None, file_info=None,
-                      dtype_config=None, null_handling_config=None, duplicate_config=None, text_config=None):
+                      chunk_method, chunk_size, overlap, model_choice, storage_choice, db_config=None, file_info=None):
     global current_model, current_store_info, current_chunks, current_embeddings, current_df
     
     current_df = df.copy()
-    
-    # Enhanced preprocessing for Deep Mode
-    data_source_info = file_info or {}
-    df1, metadata = preprocess_deep_mode(df, data_source_info, dtype_config, 
-                                        null_handling_config, duplicate_config, text_config)
     set_file_info(file_info)
+    df1 = preprocess_advanced(df, null_handling, fill_value,
+                              remove_stopwords, lowercase, stemming, lemmatization)
 
     if chunk_method == "fixed":
         chunks = chunk_fixed(df1, chunk_size, overlap)
@@ -855,6 +806,5 @@ def run_deep_pipeline(df, null_handling, fill_value, remove_stopwords,
         "rows": len(df1), 
         "chunks": len(chunks), 
         "stored": store["type"],
-        "retrieval_ready": True,
-        "metadata": metadata
+        "retrieval_ready": True
     }        
