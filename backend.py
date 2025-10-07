@@ -34,6 +34,47 @@ current_metadata = None
 current_df = None
 current_file_info = None
 
+# Persistent state storage for web API
+import pickle
+import os
+STATE_FILE = "current_state.pkl"
+
+def save_state():
+    """Save current state to disk for persistence across API calls"""
+    try:
+        state = {
+            'current_model': current_model,
+            'current_store_info': current_store_info,
+            'current_chunks': current_chunks,
+            'current_embeddings': current_embeddings,
+            'current_df': current_df,
+            'current_file_info': current_file_info
+        }
+        with open(STATE_FILE, 'wb') as f:
+            pickle.dump(state, f)
+        logger.info("State saved to disk")
+    except Exception as e:
+        logger.error(f"Failed to save state: {e}")
+
+def load_state():
+    """Load state from disk"""
+    global current_model, current_store_info, current_chunks, current_embeddings, current_df, current_file_info
+    try:
+        if os.path.exists(STATE_FILE):
+            with open(STATE_FILE, 'rb') as f:
+                state = pickle.load(f)
+            current_model = state.get('current_model')
+            current_store_info = state.get('current_store_info')
+            current_chunks = state.get('current_chunks')
+            current_embeddings = state.get('current_embeddings')
+            current_df = state.get('current_df')
+            current_file_info = state.get('current_file_info')
+            logger.info("State loaded from disk")
+            return True
+    except Exception as e:
+        logger.error(f"Failed to load state: {e}")
+    return False
+
 # -----------------------------
 # 🔹 Performance Optimization Configuration
 # -----------------------------
@@ -731,6 +772,14 @@ def retrieve_similar(query: str, k: int = 5):
     
     start_time = time.time()
     
+    # Load state from disk if globals are empty
+    if current_model is None or current_store_info is None:
+        logger.info("Globals empty, attempting to load state from disk")
+        load_state()
+    
+    # Debug: Check global variable states
+    logger.info(f"Retrieve debug - current_model: {current_model is not None}, current_store_info: {current_store_info is not None}, current_chunks: {len(current_chunks) if current_chunks else 0}")
+    
     if current_model is None or current_store_info is None:
         return {"error": "No model or store available. Run a pipeline first."}
     
@@ -861,7 +910,9 @@ def run_fast_pipeline(df, db_type="sqlite", db_config=None, file_info=None,
         df1 = preprocess_auto_fast(df)
     
     # FAST MODE DEFAULTS: semantic clustering with paraphrase model
-    chunks = chunk_semantic_cluster(df1, n_clusters=min(20, len(df1)//10))
+    # Ensure minimum clusters for small datasets
+    n_clusters = max(1, min(20, len(df1)//10)) if len(df1) > 0 else 1
+    chunks = chunk_semantic_cluster(df1, n_clusters=n_clusters)
     
     # Choose embedding method - default to paraphrase for speed
     model_choice = "text-embedding-ada-002" if use_openai else "paraphrase-MiniLM-L6-v2"
@@ -874,6 +925,12 @@ def run_fast_pipeline(df, db_type="sqlite", db_config=None, file_info=None,
     current_chunks = chunks
     current_embeddings = embs
     
+    # Debug: Log that globals are set
+    logger.info(f"Fast pipeline completed - stored {len(chunks)} chunks, model: {model_choice}, store: {store['type']}")
+    
+    # Save state to disk for persistence across API calls
+    save_state()
+    
     return {
         "rows": len(df1), 
         "chunks": len(chunks), 
@@ -883,18 +940,20 @@ def run_fast_pipeline(df, db_type="sqlite", db_config=None, file_info=None,
         "turbo_mode": use_turbo
     }
 
-def run_config1_pipeline(df, null_handling, fill_value, chunk_method,
+def run_config1_pipeline(df, chunk_method,
                          chunk_size, overlap, model_choice, storage_choice, 
                          db_config=None, file_info=None, use_openai=False, 
                          openai_api_key=None, openai_base_url=None,
-                         use_turbo=False, batch_size=EMBEDDING_BATCH_SIZE):
+                         use_turbo=False, batch_size=EMBEDDING_BATCH_SIZE,
+                         document_key_column: str = None, token_limit: int = 2000,
+                         retrieval_metric: str = "cosine"):
     global current_model, current_store_info, current_chunks, current_embeddings, current_df
     
     current_df = df.copy()
     set_file_info(file_info)
     
-    # Auto preprocess with enhanced text cleaning + user null handling
-    df1 = preprocess_auto_config1(df, null_handling, fill_value)
+    # Null handling removed for Config-1; keep minimal preprocessing if needed
+    df1 = df.copy()
 
     if chunk_method == "fixed":
         chunks = chunk_fixed(df1, chunk_size, overlap)
@@ -903,24 +962,77 @@ def run_config1_pipeline(df, null_handling, fill_value, chunk_method,
     elif chunk_method == "semantic":
         chunks = chunk_semantic_cluster(df1)
     else:  # document
-        # Use first column as default key for document chunking in config1
-        key_column = df1.columns[0] if len(df1.columns) > 0 else "id"
-        chunks, _ = document_based_chunking(df1, key_column, token_limit=2000)
+        # Use provided key column or default to first column; do not preserve headers
+        key_column = (document_key_column if document_key_column else (df1.columns[0] if len(df1.columns) > 0 else "id"))
+        chunks, _ = document_based_chunking(df1, key_column, token_limit=int(token_limit), preserve_headers=False)
 
     # Use OpenAI if specified and model choice is OpenAI model
     actual_openai = use_openai or "text-embedding" in model_choice.lower()
     model, embs = embed_texts(chunks, model_choice, openai_api_key if actual_openai else None, openai_base_url, batch_size=batch_size, use_parallel=use_turbo)
     
     if storage_choice == "faiss":
-        store = store_faiss(embs)
+        # Metric handling for FAISS
+        # - euclidean: IndexFlatL2
+        # - dot: IndexFlatIP
+        # - cosine: normalize vectors then IP (approx cosine)
+        faiss_metric = (retrieval_metric or "cosine").lower()
+        try:
+            import faiss
+            import numpy as np
+            vecs = embs
+            if faiss_metric == "cosine":
+                # Normalize rows to unit length
+                norms = np.linalg.norm(vecs, axis=1, keepdims=True)
+                norms[norms == 0] = 1.0
+                vecs = vecs / norms
+                index = faiss.IndexFlatIP(vecs.shape[1])
+            elif faiss_metric == "dot":
+                index = faiss.IndexFlatIP(vecs.shape[1])
+            else:  # euclidean
+                index = faiss.IndexFlatL2(vecs.shape[1])
+            index.add(vecs)
+            store = {"type": "faiss", "index": index, "metric": faiss_metric}
+        except Exception:
+            # Fallback to existing storage if faiss not available
+            store = store_faiss(embs)
+            store["metric"] = "euclidean"
     else:
-        store = store_chroma(chunks, embs, f"config1_{int(time.time())}")
+        # Chroma metric space: "cosine", "l2", or "ip"
+        space = (retrieval_metric or "cosine").lower()
+        if space == "euclidean":
+            space = "l2"
+        try:
+            import chromadb
+            client = chromadb.PersistentClient(path="chromadb_store")
+            col_name = f"config1_{int(time.time())}"
+            # delete if exists
+            try:
+                client.delete_collection(col_name)
+            except Exception:
+                pass
+            col = client.create_collection(col_name, metadata={"hnsw:space": space})
+            # batch add
+            batch_size = 1000
+            for i in range(0, len(chunks), batch_size):
+                end_idx = min(i + batch_size, len(chunks))
+                col.add(
+                    ids=[str(j) for j in range(i, end_idx)],
+                    documents=chunks[i:end_idx],
+                    embeddings=embs[i:end_idx].tolist()
+                )
+            store = {"type": "chroma", "collection": col, "collection_name": col_name, "space": space}
+        except Exception:
+            store = store_chroma(chunks, embs, f"config1_{int(time.time())}")
+            store["space"] = "cosine"
 
     # Store for retrieval
     current_model = model
     current_store_info = store
     current_chunks = chunks
     current_embeddings = embs
+    
+    # Save state to disk for persistence across API calls
+    save_state()
     
     return {
         "rows": len(df1), 
@@ -1047,7 +1159,7 @@ def is_large_table(conn, table_name: str, threshold_mb: int = 100) -> bool:
         table_size = get_table_size(conn, table_name)
         return table_size > threshold_mb * 1024 * 1024
     except:
-        return False  # If can't determine size, assume it's not large
+        return False  # If can't determine size, assume it's not large        
 
 
 # =============================================================================
@@ -1706,6 +1818,9 @@ def run_deep_config_pipeline(df, config_dict, file_info=None):
     current_store_info = store
     current_chunks = chunks
     current_embeddings = embeddings
+    
+    # Save state to disk for persistence across API calls
+    save_state()
     
     processing_time = time.time() - start_time
     

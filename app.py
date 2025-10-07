@@ -26,250 +26,218 @@ def validate_and_normalize_headers(columns):
         new_columns.append(new_col)
     return new_columns
 
-# Enhanced backend functions will be imported when needed
 
-# ---------- Enhanced Orange-Grey Theme with Dark Mode Support ----------
+
+# ---------- Minimalist Dark Theme ----------
 st.markdown("""
 <style>
-    /* Enhanced Orange-Grey Theme with Dark Mode Support */
     :root {
-        --primary: #FF8C00;
-        --secondary: #FFA500;
-        --accent: #FFB74D;
-        --dark: #2C3E50;
-        --medium: #34495E;
-        --light: #ECF0F1;
-        --text: #2C3E50;
-        --success: #28a745;
-        --warning: #ffc107;
-        --danger: #dc3545;
+        --ev-colors-primary: #282828;
+        --ev-colors-secondary: #424242;
+        --ev-colors-tertiary: #4e332a;
+        --ev-colors-highlight: #e75f33;
+        --ev-colors-text: #fff;
+        --ev-colors-secondaryText: grey;
+        --ev-colors-tertiaryText: #a3a3a3;
+        --ev-colors-borderColor: #ffffff1f;
+        --ev-colors-background: #161616;
+        --ev-colors-success: #d8fc77;
+        --ev-colors-danger: #dc143c;
     }
     
     /* Main background */
     .stApp {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        color: #ffffff;
+        background: var(--ev-colors-background);
+        color: var(--ev-colors-text);
     }
     
     /* Headers */
     h1, h2, h3, h4, h5, h6 {
-        color: #ffffff !important;
-        border-left: 4px solid var(--primary) !important;
+        color: var(--ev-colors-text) !important;
+        border-left: 4px solid var(--ev-colors-secondary) !important;
         padding-left: 10px !important;
     }
     
-    /* Cards with dark theme */
+    /* Cards */
     .custom-card {
-        background: #2d2d2d;
-        border: 1px solid #444;
-        border-radius: 10px;
+        background: var(--ev-colors-primary);
+        border: 1px solid var(--ev-colors-borderColor);
+        border-radius: 8px;
         padding: 20px;
         margin: 10px 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
-        border-left: 4px solid var(--primary);
     }
     
     .custom-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        background: var(--ev-colors-secondary);
     }
     
     .card-title {
-        color: #ffffff;
+        color: var(--ev-colors-text);
         font-size: 1.2em;
         font-weight: 600;
         margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
     }
     
     .card-content {
-        color: #cccccc;
+        color: var(--ev-colors-tertiaryText);
         font-size: 0.95em;
         line-height: 1.5;
     }
     
-    /* Buttons */
+    /* Buttons - Only primary buttons use highlight color */
     .stButton > button {
-        background: linear-gradient(45deg, var(--primary), var(--secondary)) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 10px 20px !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        background: var(--ev-colors-secondary) !important;
+        color: var(--ev-colors-text) !important;
+        border: 1px solid var(--ev-colors-borderColor) !important;
+        border-radius: 6px !important;
+        padding: 8px 16px !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
     }
     
     .stButton > button:hover {
-        background: linear-gradient(45deg, var(--secondary), var(--accent)) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
+        background: var(--ev-colors-tertiary) !important;
+        border-color: var(--ev-colors-tertiaryText) !important;
+    }
+    
+    /* Primary/Important buttons use highlight color */
+    .primary-button > button {
+        background: var(--ev-colors-highlight) !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 600 !important;
+    }
+    
+    .primary-button > button:hover {
+        background: #f27024 !important;
+        transform: translateY(-1px) !important;
     }
     
     /* Process steps */
     .process-step {
-        background: #2d2d2d;
+        background: var(--ev-colors-primary);
         padding: 15px;
-        border-radius: 8px;
+        border-radius: 6px;
         margin: 8px 0;
-        border-left: 4px solid #666;
+        border-left: 4px solid var(--ev-colors-secondary);
         transition: all 0.3s ease;
     }
     
     .process-step.running {
-        border-left-color: var(--warning);
-        background: linear-gradient(90deg, #2d2d2d, #444);
+        border-left-color: var(--ev-colors-highlight);
     }
     
     .process-step.completed {
-        border-left-color: var(--success);
-        background: linear-gradient(90deg, #2d2d2d, #2d4a2d);
+        border-left-color: var(--ev-colors-success);
     }
     
     .process-step.pending {
-        border-left-color: #666;
-        background: #2d2d2d;
+        border-left-color: var(--ev-colors-secondary);
     }
     
     /* Dataframes */
     .dataframe {
-        background: #2d2d2d !important;
-        color: #ffffff !important;
+        background: var(--ev-colors-primary) !important;
+        color: var(--ev-colors-text) !important;
     }
     
-    /* Text inputs - WIDER */
-    .stTextInput > div > div {
-        width: 100% !important;
-    }
-    
+    /* Input fields */
     .stTextInput > div > div > input {
-        background: #2d2d2d;
-        color: #ffffff;
-        border: 1px solid #555;
-        width: 100% !important;
+        background: var(--ev-colors-primary);
+        color: var(--ev-colors-text);
+        border: 1px solid var(--ev-colors-borderColor);
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 1px var(--primary);
+        border-color: var(--ev-colors-highlight);
     }
     
     /* Select boxes */
     .stSelectbox > div > div {
-        background: #2d2d2d;
-        color: #ffffff;
-        border: 1px solid #555;
+        background: var(--ev-colors-primary);
+        color: var(--ev-colors-text);
+        border: 1px solid var(--ev-colors-borderColor);
     }
     
     /* Number inputs */
     .stNumberInput > div > div > input {
-        background: #2d2d2d;
-        color: #ffffff;
-        border: 1px solid #555;
+        background: var(--ev-colors-primary);
+        color: var(--ev-colors-text);
+        border: 1px solid var(--ev-colors-borderColor);
     }
     
-    /* Checkboxes */
-    .stCheckbox > label {
-        color: #ffffff !important;
-    }
-    
-    /* Radio buttons */
-    .stRadio > label {
-        color: #ffffff !important;
+    /* Checkboxes & Radio buttons */
+    .stCheckbox > label, .stRadio > label {
+        color: var(--ev-colors-text) !important;
     }
     
     /* Sidebar */
     .css-1d391kg {
-        background: linear-gradient(180deg, var(--dark) 0%, var(--medium) 100%) !important;
+        background: var(--ev-colors-primary) !important;
     }
     
-    /* Success messages */
+    /* Messages */
     .stSuccess {
-        background: linear-gradient(45deg, #155724, #1e7e34) !important;
-        color: #ffffff !important;
-        border-left: 4px solid var(--success) !important;
+        background: var(--ev-colors-primary) !important;
+        color: var(--ev-colors-success) !important;
+        border-left: 4px solid var(--ev-colors-success) !important;
     }
     
-    /* Error messages */
     .stError {
-        background: linear-gradient(45deg, #721c24, #c82333) !important;
-        color: #ffffff !important;
-        border-left: 4px solid var(--danger) !important;
+        background: var(--ev-colors-primary) !important;
+        color: var(--ev-colors-danger) !important;
+        border-left: 4px solid var(--ev-colors-danger) !important;
     }
     
-    /* Warning messages */
     .stWarning {
-        background: linear-gradient(45deg, #856404, #e0a800) !important;
-        color: #ffffff !important;
-        border-left: 4px solid var(--warning) !important;
+        background: var(--ev-colors-primary) !important;
+        color: var(--ev-colors-highlight) !important;
+        border-left: 4px solid var(--ev-colors-highlight) !important;
     }
     
-    /* Info messages */
     .stInfo {
-        background: linear-gradient(45deg, #0c5460, #138496) !important;
-        color: #ffffff !important;
-        border-left: 4px solid #17a2b8 !important;
+        background: var(--ev-colors-primary) !important;
+        color: var(--ev-colors-text) !important;
+        border-left: 4px solid var(--ev-colors-secondary) !important;
     }
     
-    /* Center align text inputs */
-    div[data-testid="stTextInput"] {
-        width: 100% !important;
-    }
-    
-    /* Make text areas wider */
+    /* Text areas */
     .stTextArea > div > div > textarea {
-        width: 100% !important;
+        background: var(--ev-colors-primary);
+        color: var(--ev-colors-text);
+        border: 1px solid var(--ev-colors-borderColor);
     }
     
-    /* Preview table styling */
+    /* Preview table */
     .preview-table {
-        background: #2d2d2d;
-        border: 1px solid #444;
-        border-radius: 8px;
+        background: var(--ev-colors-primary);
+        border: 1px solid var(--ev-colors-borderColor);
+        border-radius: 6px;
         padding: 15px;
         margin: 10px 0;
     }
     
-    /* Large file warning */
-    .large-file-warning {
-        background: linear-gradient(45deg, #856404, #e0a800);
-        color: white;
-        padding: 15px;
-        border-radius: 8px;
-        margin: 10px 0;
-        border-left: 4px solid var(--warning);
-    }
-    
-    /* File upload styling */
+    /* File upload */
     .uploadedFile {
-        background: #2d2d2d;
-        border: 2px dashed #666;
-        border-radius: 10px;
+        background: var(--ev-colors-primary);
+        border: 2px dashed var(--ev-colors-borderColor);
+        border-radius: 8px;
         padding: 20px;
         text-align: center;
         margin: 10px 0;
     }
     
-    /* Progress bar styling */
+    /* Progress bar */
     .stProgress > div > div > div {
-        background-color: var(--primary);
-    }
-    
-    /* Turbo mode styling */
-    .turbo-mode {
-        background: linear-gradient(45deg, #FF8C00, #FF4500) !important;
-        color: white !important;
-        border: 2px solid #FF4500 !important;
+        background-color: var(--ev-colors-highlight);
     }
     
     /* Scrollable chunk display */
     .scrollable-chunk {
-        background: #1a1a1a;
-        border: 1px solid #444;
-        border-radius: 5px;
+        background: var(--ev-colors-primary);
+        border: 1px solid var(--ev-colors-borderColor);
+        border-radius: 4px;
         padding: 10px;
         margin: 5px 0;
         max-height: 300px;
@@ -282,111 +250,307 @@ st.markdown("""
     }
     
     .chunk-header {
-        background: #2d2d2d;
+        background: var(--ev-colors-secondary);
         padding: 8px 12px;
-        border-radius: 5px;
+        border-radius: 4px;
         margin-bottom: 8px;
         font-weight: bold;
-        border-left: 3px solid var(--primary);
+        color: var(--ev-colors-text);
     }
     
-    /* Scrollbar styling */
+    /* Scrollbar */
     .scrollable-chunk::-webkit-scrollbar {
-        width: 8px;
+        width: 6px;
     }
     
     .scrollable-chunk::-webkit-scrollbar-track {
-        background: #2d2d2d;
-        border-radius: 4px;
+        background: var(--ev-colors-primary);
     }
     
     .scrollable-chunk::-webkit-scrollbar-thumb {
-        background: var(--primary);
-        border-radius: 4px;
+        background: var(--ev-colors-secondary);
+        border-radius: 3px;
     }
     
     .scrollable-chunk::-webkit-scrollbar-thumb:hover {
-        background: var(--secondary);
+        background: var(--ev-colors-tertiaryText);
+    }
+    
+    /* Minimal highlight usage */
+    .highlight-text {
+        color: var(--ev-colors-highlight);
+        font-weight: 600;
+    }
+    
+    /* Section headers */
+    .section-header {
+        color: var(--ev-colors-text);
+        border-bottom: 1px solid var(--ev-colors-borderColor);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
+
+# ---------- SVG Logo Integration ----------
+logo_svg = """<svg id="Layer_2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1703.31 535.6"><defs><style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #fbb03b;
+      }
+
+      .cls-3 {
+        fill: #f27024;
+      }
+    </style></defs><g id="Layer_10"><g><path class="cls-1" d="M125.67,428.34c-39.15,0-70.27-13.09-92.48-38.91C11.17,363.84,0,334.47,0,302.15c0-30.4,9.47-57.88,28.14-81.68,23.77-30.39,56.01-45.8,95.83-45.8s74.1,15.76,98.58,46.85c17.39,21.95,26.36,49.63,26.66,82.28l.05,5.23H41.22c1.5,23.04,9.58,42.3,24.08,57.31,15.74,16.28,34.65,24.2,57.81,24.2,11.12,0,22.08-1.96,32.6-5.83,10.49-3.85,19.51-9.02,26.82-15.36,7.36-6.39,8.83-7.95,14.56-15.39l2.6-4.32c5.42-9.02,16.94-12.25,26.26-7.35h0c9.62,5.06,13.39,16.91,8.46,26.6l-1.53,3c-8.02,11.54-10.34,14.39-21.53,24.68-11.22,10.32-24.02,18.29-38.05,23.68-14.02,5.38-30.04,8.1-47.63,8.1ZM204.47,272.93c-3.65-12.13-8.55-22.08-14.6-29.64-7.06-8.82-16.57-16.06-28.27-21.51-11.75-5.46-24.27-8.23-37.2-8.23-21.29,0-39.83,6.92-55.1,20.58-9.88,8.81-17.76,21.84-23.46,38.8h158.64Z"></path><rect class="cls-1" x="288.28" y="97.26" width="40.15" height="331.08" rx="20.07" ry="20.07"></rect><path class="cls-1" d="M490.58,428.34c-39.15,0-70.27-13.09-92.48-38.91-22.02-25.59-33.19-54.96-33.19-87.28,0-30.4,9.47-57.88,28.14-81.68,23.77-30.39,56.01-45.8,95.83-45.8s74.1,15.76,98.58,46.85c17.39,21.95,26.36,49.63,26.66,82.28l.05,5.23h-208.03c1.5,23.04,9.58,42.3,24.08,57.31,15.74,16.28,34.65,24.2,57.81,24.2,11.12,0,22.08-1.96,32.6-5.83,10.49-3.85,19.51-9.02,26.82-15.36,7.36-6.39,8.83-7.95,14.56-15.39l2.6-4.32c5.42-9.02,16.94-12.25,26.26-7.35h0c9.62,5.06,13.39,16.91,8.46,26.6l-1.53,3c-8.02,11.54-10.34,14.39-21.53,24.68-11.22,10.32-24.02,18.29-38.05,23.68-14.02,5.38-30.04,8.1-47.63,8.1ZM569.37,272.93c-3.65-12.13-8.55-22.08-14.6-29.64-7.06-8.82-16.57-16.06-28.27-21.51-11.75-5.46-24.27-8.23-37.2-8.23-21.29,0-39.83,6.92-55.1,20.58-9.88,8.81-17.76,21.84-23.46,38.8h158.64Z"></path><path class="cls-1" d="M751.92,422.82l-96-208.47c-5.97-12.97,3.5-27.77,17.78-27.77h0c7.64,0,14.59,4.45,17.78,11.39l69.08,150.01,68.21-149.93c3.18-6.99,10.15-11.47,17.82-11.47h.22c14.26,0,23.74,14.76,17.8,27.73l-95.43,208.49c-1.55,3.38-4.92,5.54-8.63,5.54h0c-3.71,0-7.08-2.16-8.63-5.52Z"></path><g><path class="cls-2" d="M1052.79,311.55c-30.67,0-56.25,33.01-62.14,66.95,5.07-11.19,11.63-17.94,18.79-17.94,15.94,0,23.38,33.67,28.84,74.37,1.51,11.28,12.67,86.53,13.56,100.67.05,0,.11,0,.16,0,1.04-16.27,10.83-87.61,12.64-100.66,5.78-41.56,12.93-74.37,28.87-74.37,9.09,0,17.21,10.84,22.5,27.76-2.22-38.69-29.66-76.77-63.22-76.77Z"></path><path class="cls-3" d="M1053.33,46.78c60,50.38,96.73,131.67,97.74,218.86-26.55-32.52-60.86-50.27-97.76-50.27s-71.19,17.74-97.74,50.24c1.01-87.19,37.75-168.47,97.75-218.83M1053.33,0c-80.86,53.76-135.27,154.25-135.27,269.32,0,28.59,3.36,56.29,9.66,82.6,4.47,18.64,10.39,36.6,17.66,53.67,2.54-84.98,49.89-152.72,107.94-152.72s105.41,67.76,107.94,152.76c10.02-23.52,17.51-48.73,22.09-75.13,3.46-19.78,5.25-40.25,5.25-61.19C1188.59,154.25,1134.19,53.78,1053.33,0h0Z"></path></g><path class="cls-3" d="M1246.12,390.85l-15.96-370.06C1229.55,9.49,1238.55,0,1249.87,0h0c11.31,0,20.31,9.49,19.71,20.79l-15.96,370.06h-7.5Z"></path><path class="cls-1" d="M1333.96,408.27v-185.58h-40.62v-36.1h40.62v-69.25c0-11.09,8.99-20.07,20.07-20.07h0c11.09,0,20.07,8.99,20.07,20.07v69.25h62.21v36.1h-62.21v185.58c0,11.09-8.99,20.07-20.07,20.07h0c-11.09,0-20.07-8.99-20.07-20.07Z"></path><path class="cls-1" d="M1579.72,428.34c-39.15,0-70.26-13.09-92.48-38.91-22.02-25.59-33.18-54.95-33.18-87.28,0-30.4,9.47-57.88,28.14-81.68,23.77-30.39,56.01-45.8,95.83-45.8s74.1,15.76,98.59,46.85c17.39,21.94,26.36,49.63,26.66,82.28l.05,5.23h-208.03c1.5,23.04,9.59,42.3,24.08,57.31,15.74,16.28,34.64,24.2,57.81,24.2,11.12,0,22.09-1.96,32.6-5.83,10.49-3.85,19.51-9.02,26.82-15.36,7.36-6.39,9.22-7.53,15.54-17.02l1.62-2.69c5.42-9.02,16.94-12.25,26.26-7.35h0c9.62,5.06,13.39,16.91,8.46,26.6l-1.36,2.67c-6.09,8.44-10.51,14.72-21.7,25.01-11.22,10.32-24.02,18.29-38.06,23.68-14.02,5.38-30.04,8.1-47.63,8.1ZM1658.52,272.93c-3.65-12.13-8.55-22.08-14.6-29.64-7.06-8.82-16.57-16.06-28.27-21.51-11.76-5.46-24.27-8.23-37.2-8.23-21.29,0-39.83,6.92-55.1,20.58-9.89,8.81-17.76,21.85-23.46,38.8h158.64Z"></path></g></g></svg>"""
+
+# Convert SVG to base64 and display
+b64_logo = base64.b64encode(logo_svg.encode('utf-8')).decode("utf-8")
+
+# Display logo and header
+st.markdown(
+    f'''
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="data:image/svg+xml;base64,{b64_logo}" width="300" alt="I Chunk Optimizer Logo">
+    </div>
+    <div style="background: var(--ev-colors-primary); border: 1px solid var(--ev-colors-borderColor); border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+        <h1 style="color: var(--ev-colors-text); text-align: center; margin: 0; font-size: 2.2em;">I Chunk Optimizer</h1>
+        <p style="color: var(--ev-colors-tertiaryText); text-align: center; margin: 10px 0 0 0; font-size: 1.1em;">Advanced Text Processing + 3GB File Support + Performance Optimized</p>
+    </div>
+    ''',
+    unsafe_allow_html=True
+)
 
 # ---------- API Client Functions ----------
 def call_fast_api(file_path: str, filename: str, db_type: str, db_config: dict = None, 
                   use_openai: bool = False, openai_api_key: str = None, openai_base_url: str = None,
                   process_large_files: bool = True, use_turbo: bool = False, batch_size: int = 256):
-    """Send file directly from filesystem path"""
+    """Send CSV upload or trigger DB import for Fast mode"""
     try:
+        # DB import path: send only form data (no file open)
+        if db_config and db_config.get('use_db'):
+            data = {
+                "db_type": db_config.get("db_type"),
+                "host": db_config.get("host"),
+                "port": db_config.get("port"),
+                "username": db_config.get("username"),
+                "password": db_config.get("password"),
+                "database": db_config.get("database"),
+                "table_name": db_config.get("table_name"),
+                "use_openai": use_openai,
+                "openai_api_key": openai_api_key,
+                "openai_base_url": openai_base_url,
+                "process_large_files": process_large_files,
+                "use_turbo": use_turbo,
+                "batch_size": batch_size
+            }
+            response = requests.post(f"{API_BASE_URL}/run_fast", data=data)
+            return response.json()
+
+        # CSV upload path: open and send file
         with open(file_path, 'rb') as f:
-            if db_config and db_config.get('use_db'):
-                data = {
-                    "db_type": db_config["db_type"],
-                    "host": db_config["host"],
-                    "port": db_config["port"],
-                    "username": db_config["username"],
-                    "password": db_config["password"],
-                    "database": db_config["database"],
-                    "table_name": db_config["table_name"],
-                    "use_openai": use_openai,
-                    "openai_api_key": openai_api_key,
-                    "openai_base_url": openai_base_url,
-                    "process_large_files": process_large_files,
-                    "use_turbo": use_turbo,
-                    "batch_size": batch_size
-                }
-                response = requests.post(f"{API_BASE_URL}/run_fast", data=data)
-            else:
-                files = {"file": (filename, f, "text/csv")}
-                data = {
-                    "db_type": db_type,
-                    "use_openai": use_openai,
-                    "openai_api_key": openai_api_key,
-                    "openai_base_url": openai_base_url,
-                    "process_large_files": process_large_files,
-                    "use_turbo": use_turbo,
-                    "batch_size": batch_size
-                }
-                response = requests.post(f"{API_BASE_URL}/run_fast", files=files, data=data)
+            files = {"file": (filename, f, "text/csv")}
+            data = {
+                "db_type": db_type,
+                "use_openai": use_openai,
+                "openai_api_key": openai_api_key,
+                "openai_base_url": openai_base_url,
+                "process_large_files": process_large_files,
+                "use_turbo": use_turbo,
+                "batch_size": batch_size
+            }
+            response = requests.post(f"{API_BASE_URL}/run_fast", files=files, data=data)
         return response.json()
     except Exception as e:
         return {"error": f"API call failed: {str(e)}"}
 
-def call_config1_api(file_path: str, filename: str, config: dict, db_config: dict = None,
-                    use_openai: bool = False, openai_api_key: str = None, openai_base_url: str = None,
-                    process_large_files: bool = True, use_turbo: bool = False, batch_size: int = 256):
-    """Send file directly from filesystem path"""
+# Deep Config Step-by-Step API Functions
+def call_deep_config_preprocess_api(file_path: str, filename: str, db_config: dict = None):
+    """Step 1: Preprocess data"""
     try:
-        with open(file_path, 'rb') as f:
-            if db_config and db_config.get('use_db'):
-                data = {k: str(v).lower() if isinstance(v, bool) else v for k, v in config.items()}
-                data.update({
-                    "db_type": db_config["db_type"],
-                    "host": db_config["host"],
-                    "port": db_config["port"],
-                    "username": db_config["username"],
-                    "password": db_config["password"],
-                    "database": db_config["database"],
-                    "table_name": db_config["table_name"],
-                    "use_openai": use_openai,
-                    "openai_api_key": openai_api_key,
-                    "openai_base_url": openai_base_url,
-                    "process_large_files": process_large_files,
-                    "use_turbo": use_turbo,
-                    "batch_size": batch_size
-                })
-                response = requests.post(f"{API_BASE_URL}/run_config1", data=data)
-            else:
+        if db_config and db_config.get('use_db'):
+            data = {
+                "db_type": db_config.get("db_type"),
+                "host": db_config.get("host"),
+                "port": db_config.get("port"),
+                "username": db_config.get("username"),
+                "password": db_config.get("password"),
+                "database": db_config.get("database"),
+                "table_name": db_config.get("table_name")
+            }
+            response = requests.post(f"{API_BASE_URL}/deep_config/preprocess", data=data)
+        else:
+            with open(file_path, 'rb') as f:
                 files = {"file": (filename, f, "text/csv")}
-                data = {k: str(v).lower() if isinstance(v, bool) else v for k, v in config.items()}
-                data.update({
+                response = requests.post(f"{API_BASE_URL}/deep_config/preprocess", files=files)
+        return response.json()
+    except Exception as e:
+        return {"error": f"Preprocess API call failed: {str(e)}"}
+
+def call_deep_config_type_convert_api(type_conversions: dict):
+    """Step 2: Convert data types"""
+    try:
+        data = {"type_conversions": json.dumps(type_conversions)}
+        response = requests.post(f"{API_BASE_URL}/deep_config/type_convert", data=data)
+        return response.json()
+    except Exception as e:
+        return {"error": f"Type convert API call failed: {str(e)}"}
+
+def call_deep_config_null_handle_api(null_strategies: dict):
+    """Step 3: Handle null values"""
+    try:
+        data = {"null_strategies": json.dumps(null_strategies)}
+        response = requests.post(f"{API_BASE_URL}/deep_config/null_handle", data=data)
+        return response.json()
+    except Exception as e:
+        return {"error": f"Null handle API call failed: {str(e)}"}
+
+def call_deep_config_stopwords_api(remove_stopwords: bool):
+    """Step 4: Remove stop words"""
+    try:
+        data = {"remove_stopwords": remove_stopwords}
+        response = requests.post(f"{API_BASE_URL}/deep_config/stopwords", data=data)
+        return response.json()
+    except Exception as e:
+        return {"error": f"Stopwords API call failed: {str(e)}"}
+
+def call_deep_config_normalize_api(text_processing: str):
+    """Step 5: Text normalization"""
+    try:
+        data = {"text_processing": text_processing}
+        response = requests.post(f"{API_BASE_URL}/deep_config/normalize", data=data)
+        return response.json()
+    except Exception as e:
+        return {"error": f"Normalize API call failed: {str(e)}"}
+
+def call_deep_config_chunk_api(chunk_params: dict):
+    """Step 6: Chunk data"""
+    try:
+        # Extract parameters from the dictionary
+        chunk_method = chunk_params.get("method", "fixed")
+        chunk_size = chunk_params.get("chunk_size", 400)
+        overlap = chunk_params.get("overlap", 50)
+        key_column = chunk_params.get("key_column")
+        token_limit = chunk_params.get("token_limit", 2000)
+        preserve_headers = chunk_params.get("preserve_headers", True)
+        
+        data = {
+            "chunk_method": chunk_method,
+            "chunk_size": chunk_size,
+            "overlap": overlap,
+            "token_limit": token_limit,
+            "preserve_headers": preserve_headers
+        }
+        if key_column:
+            data["key_column"] = key_column
+        if chunk_method == "semantic":
+            data["n_clusters"] = chunk_params.get("n_clusters", 10)
+        response = requests.post(f"{API_BASE_URL}/deep_config/chunk", data=data)
+        return response.json()
+    except Exception as e:
+        return {"error": f"Chunk API call failed: {str(e)}"}
+
+def call_deep_config_embed_api(embed_params: dict):
+    """Step 7: Generate embeddings"""
+    try:
+        # Extract parameters from the dictionary
+        model_name = embed_params.get("model_name", "paraphrase-MiniLM-L6-v2")
+        use_openai = embed_params.get("use_openai", False)
+        openai_api_key = embed_params.get("openai_api_key")
+        openai_base_url = embed_params.get("openai_base_url")
+        batch_size = embed_params.get("batch_size", 64)
+        use_parallel = embed_params.get("use_parallel", True)
+        
+        data = {
+            "model_name": model_name,
                     "use_openai": use_openai,
-                    "openai_api_key": openai_api_key,
-                    "openai_base_url": openai_base_url,
-                    "process_large_files": process_large_files,
-                    "use_turbo": use_turbo,
                     "batch_size": batch_size
-                })
-                response = requests.post(f"{API_BASE_URL}/run_config1", files=files, data=data)
+        }
+        if openai_api_key:
+            data["openai_api_key"] = openai_api_key
+        if openai_base_url:
+            data["openai_base_url"] = openai_base_url
+        response = requests.post(f"{API_BASE_URL}/deep_config/embed", data=data)
+        return response.json()
+    except Exception as e:
+        return {"error": f"Embed API call failed: {str(e)}"}
+
+def call_deep_config_store_api(store_params: dict):
+    """Step 8: Store embeddings"""
+    try:
+        # Extract parameters from the dictionary
+        storage_type = store_params.get("storage_type", "chroma")
+        collection_name = store_params.get("collection_name", "deep_config_collection")
+        retrieval_metric = store_params.get("retrieval_metric", "cosine")
+        
+        data = {
+            "storage_type": storage_type,
+            "collection_name": collection_name
+        }
+        response = requests.post(f"{API_BASE_URL}/deep_config/store", data=data)
+        return response.json()
+    except Exception as e:
+        return {"error": f"Store API call failed: {str(e)}"}
+
+# Download functions for Deep Config
+def download_deep_config_preprocessed():
+    """Download preprocessed data"""
+    response = requests.get(f"{API_BASE_URL}/deep_config/export/preprocessed")
+    return response.content
+
+def download_deep_config_chunks():
+    """Download chunks"""
+    response = requests.get(f"{API_BASE_URL}/deep_config/export/chunks")
+    return response.content
+
+def download_deep_config_embeddings():
+    """Download embeddings"""
+    response = requests.get(f"{API_BASE_URL}/deep_config/export/embeddings")
+    return response.content
+
+
+def call_config1_api(file_path: str, filename: str, config: dict, db_config: dict = None,
+                 use_openai: bool = False, openai_api_key: str = None, openai_base_url: str = None,
+                 process_large_files: bool = True, use_turbo: bool = False, batch_size: int = 256):
+    """Send CSV upload or trigger DB import for Config-1"""
+    try:
+        # DB import path: send only form data
+        if db_config and db_config.get('use_db'):
+            data = {k: str(v).lower() if isinstance(v, bool) else v for k, v in config.items()}
+            data.update({
+                "db_type": db_config.get("db_type"),
+                "host": db_config.get("host"),
+                "port": db_config.get("port"),
+                "username": db_config.get("username"),
+                "password": db_config.get("password"),
+                "database": db_config.get("database"),
+                "table_name": db_config.get("table_name"),
+                "use_openai": use_openai,
+                "openai_api_key": openai_api_key,
+                "openai_base_url": openai_base_url,
+                "process_large_files": process_large_files,
+                "use_turbo": use_turbo,
+                "batch_size": batch_size
+            })
+            response = requests.post(f"{API_BASE_URL}/run_config1", data=data)
+            return response.json()
+
+        # CSV upload path: open and send file
+        with open(file_path, 'rb') as f:
+            files = {"file": (filename, f, "text/csv")}
+            data = {k: str(v).lower() if isinstance(v, bool) else v for k, v in config.items()}
+            data.update({
+                "use_openai": use_openai,
+                "openai_api_key": openai_api_key,
+                "openai_base_url": openai_base_url,
+                "process_large_files": process_large_files,
+                "use_turbo": use_turbo,
+                "batch_size": batch_size
+            })
+            response = requests.post(f"{API_BASE_URL}/run_config1", files=files, data=data)
         return response.json()
     except Exception as e:
         return {"error": f"API call failed: {str(e)}"}
@@ -527,15 +691,7 @@ def display_scrollable_chunk(result, chunk_index):
             st.json(result['metadata'])
 
 # ---------- Streamlit App ----------
-st.set_page_config(page_title="Chunking Optimizer", layout="wide", page_icon="📦")
-
-# Custom header
-st.markdown("""
-<div style="background: linear-gradient(45deg, #FF8C00, #FFA500); padding: 30px; border-radius: 15px; margin-bottom: 30px;">
-    <h1 style="color: white; text-align: center; margin: 0; font-size: 2.5em;">📦 Chunking Optimizer v2.0</h1>
-    <p style="color: white; text-align: center; margin: 10px 0 0 0; font-size: 1.2em;">Advanced Text Processing + 3GB File Support + Performance Optimized</p>
-</div>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="I Chunk Optimizer", layout="wide", page_icon="")
 
 # Session state
 if "api_results" not in st.session_state:
@@ -764,7 +920,7 @@ with col3:
         st.session_state.process_status = {k: "pending" for k in st.session_state.process_status}
 
 if st.session_state.current_mode:
-    st.success(f"Selected: **{st.session_state.current_mode.upper()} MODE** • {'⚡ Turbo Enabled' if st.session_state.use_turbo else 'Normal Mode'} • Batch Size: {st.session_state.batch_size}")
+    pass
 
 # Mode-specific processing
 if st.session_state.current_mode:
@@ -798,7 +954,7 @@ if st.session_state.current_mode:
                     </div>
                     """, unsafe_allow_html=True)
                 
-                st.success(f"✅ **{uploaded_file.name}** loaded! ({file_size_str})")
+                # removed success banner per request
                 
             use_db_config = None
             
@@ -819,7 +975,7 @@ if st.session_state.current_mode:
             # Test connection and get tables
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("🔌 Test Connection", key="fast_test_conn"):
+                if st.button("🔌 Test Connection", key="fast_test_conn", help="Tests DB connectivity. Then click “List Tables”."):
                     res = db_test_connection_api({
                         "db_type": db_type,
                         "host": host,
@@ -829,9 +985,17 @@ if st.session_state.current_mode:
                         "database": database,
                     })
                     if res.get("status") == "success":
-                        st.success("✅ Connection successful!")
+                        import time as _t
+                        st.session_state["fast_conn_ok_until"] = _t.time() + 5
                     else:
                         st.error(f"❌ Connection failed: {res.get('message', 'Unknown error')}")
+                # Ephemeral success message under the button
+                import time as _t
+                if st.session_state.get("fast_conn_ok_until", 0) > _t.time():
+                    st.markdown(
+                        '<span style="padding:6px 10px; border:1px solid #444; border-radius:6px; background:#2d2d2d; color:#ddd;">Connection successful</span>',
+                        unsafe_allow_html=True
+                    )
             
             with col2:
                 if st.button("📋 List Tables", key="fast_list_tables"):
@@ -864,7 +1028,6 @@ if st.session_state.current_mode:
                 }
             else:
                 use_db_config = None
-                st.info("👆 Test connection and list tables first")
         
         # FAST MODE DEFAULTS - No user configuration needed
         # Auto-enable turbo mode and set batch size to 256
@@ -995,7 +1158,7 @@ if st.session_state.current_mode:
             # Test connection and get tables
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("🔌 Test Connection", key="config1_test_conn"):
+                if st.button("🔌 Test Connection", key="config1_test_conn", help="Tests DB connectivity. Then click “List Tables”."):
                     res = db_test_connection_api({
                         "db_type": db_type,
                         "host": host,
@@ -1005,9 +1168,17 @@ if st.session_state.current_mode:
                         "database": database,
                     })
                     if res.get("status") == "success":
-                        st.success("✅ Connection successful!")
+                        import time as _t
+                        st.session_state["config1_conn_ok_until"] = _t.time() + 5
                     else:
                         st.error(f"❌ Connection failed: {res.get('message', 'Unknown error')}")
+                # Ephemeral success message under the button
+                import time as _t
+                if st.session_state.get("config1_conn_ok_until", 0) > _t.time():
+                    st.markdown(
+                        '<span style="padding:6px 10px; border:1px solid #444; border-radius:6px; background:#2d2d2d; color:#ddd;">Connection successful</span>',
+                        unsafe_allow_html=True
+                    )
             
             with col2:
                 if st.button("📋 List Tables", key="config1_list_tables"):
@@ -1040,55 +1211,79 @@ if st.session_state.current_mode:
                 }
             else:
                 use_db_config = None
-                st.info("👆 Test connection and list tables first")
         
-        # Config-1 parameters
+        # Config-1 parameters (refactored into tabs)
         st.markdown("#### ⚙️ Configuration Parameters")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            null_handling = st.selectbox("Null value handling", ["keep", "drop", "fill"], key="config1_null")
-            fill_value = st.text_input("Fill value", "Unknown", key="config1_fill") if null_handling == "fill" else None
-            
+        tab_chunk, tab_embed, tab_store = st.tabs(["Chunking", "Embedding", "Storage & Retrieval"])
+
+        # Defaults to ensure variables exist for payload
+        chunk_method = st.session_state.get("config1_chunk", "recursive")
+        chunk_size = st.session_state.get("config1_size", 800)
+        overlap = st.session_state.get("config1_overlap", 20)
+        document_key_column = st.session_state.get("config1_document_key_column", "")
+        token_limit = st.session_state.get("config1_token_limit", 2000)
+        model_choice = st.session_state.get("config1_model", "paraphrase-MiniLM-L6-v2")
+        storage_choice = st.session_state.get("config1_storage", "faiss")
+        config1_retrieval_metric = st.session_state.get("config1_retrieval_metric", "cosine")
+
+        with tab_chunk:
             st.markdown("#### 📦 Chunking")
-            chunk_method = st.selectbox("Chunking method", ["fixed", "recursive", "semantic"], key="config1_chunk")
-            
+            chunk_method = st.selectbox("Chunking method", ["fixed", "recursive", "semantic", "document"], key="config1_chunk")
             if chunk_method in ["fixed", "recursive"]:
-                chunk_size = st.slider("Chunk size", 100, 2000, 800, key="config1_size")
-                overlap = st.slider("Overlap", 0, 500, 20, key="config1_overlap")
-        
-        with col2:
+                chunk_size = st.slider("Chunk size", 100, 2000, int(chunk_size), key="config1_size")
+                overlap = st.slider("Overlap", 0, 500, int(overlap), key="config1_overlap")
+            elif chunk_method == "document":
+                st.markdown("#### 📄 Document Chunking Options")
+                document_key_column = st.text_input(
+                    "Key column (leave blank to use first column)",
+                    key="config1_document_key_column",
+                    value=str(document_key_column) if document_key_column else ""
+                )
+                token_limit = st.number_input(
+                    "Token limit per chunk",
+                    min_value=200,
+                    max_value=10000,
+                    value=int(token_limit),
+                    step=100,
+                    key="config1_token_limit"
+                )
+                # removed explanatory info text per request
+
+        with tab_embed:
             st.markdown("#### 🤖 Embedding")
             model_choice = st.selectbox("Embedding model", 
                                       ["all-MiniLM-L6-v2", "paraphrase-MiniLM-L6-v2", "text-embedding-ada-002"],
                                       key="config1_model")
-            
-            st.markdown("#### 💾 Storage")
-            storage_choice = st.selectbox("Vector storage", ["faiss", "chromadb"], key="config1_storage")
-        
-        # Performance Configuration for Config1 Mode
-        st.markdown("#### ⚡ Performance Configuration")
-        col1, col2 = st.columns(2)
-        
-        with col1:
+            st.markdown("#### ⚡ Performance")
             st.session_state.use_turbo = st.checkbox(
                 "Enable Turbo Mode", 
                 value=st.session_state.use_turbo,
-                help="Faster processing with parallel operations"
+                help="Faster processing with parallel operations",
+                key="config1_use_turbo"
             )
-        
-        with col2:
             st.session_state.batch_size = st.slider(
                 "Embedding Batch Size",
                 min_value=64,
                 max_value=512,
                 value=st.session_state.batch_size,
                 step=64,
-                help="Larger batches = faster processing (requires more memory)"
+                help="Larger batches = faster processing (requires more memory)",
+                key="config1_batch_size"
             )
+
+        with tab_store:
+            st.markdown("#### 💾 Storage")
+            storage_choice = st.selectbox("Vector storage", ["faiss", "chromadb"], key="config1_storage", index=["faiss","chromadb"].index(storage_choice) if storage_choice in ["faiss","chromadb"] else 0)
+            st.markdown("#### 🔎 Retrieval Metric")
+            config1_retrieval_metric = st.selectbox(
+                "Similarity metric",
+                ["cosine", "dot", "euclidean"],
+                index=["cosine","dot","euclidean"].index(config1_retrieval_metric) if config1_retrieval_metric in ["cosine","dot","euclidean"] else 0,
+                key="config1_retrieval_metric"
+            )
+            # removed explanatory captions per request
         
-        if st.session_state.use_turbo:
-            st.success("✅ Turbo Mode: 2-3x Faster Processing")
+        # removed turbo mode success banner per request
         
         run_enabled = (
             (input_source == "📁 Upload CSV File" and st.session_state.get('temp_file_path') is not None) or
@@ -1099,14 +1294,20 @@ if st.session_state.current_mode:
             with st.spinner("Running Config-1 pipeline..."):
                 try:
                     config = {
-                        "null_handling": null_handling,
-                        "fill_value": fill_value if fill_value else "Unknown",
                         "chunk_method": chunk_method,
                         "chunk_size": chunk_size if 'chunk_size' in locals() else 800,
                         "overlap": overlap if 'overlap' in locals() else 20,
                         "model_choice": model_choice,
                         "storage_choice": storage_choice,
                     }
+                    if chunk_method == "document":
+                        if 'document_key_column' in locals() and document_key_column:
+                            config["document_key_column"] = document_key_column
+                        if 'token_limit' in locals() and token_limit:
+                            config["token_limit"] = int(token_limit)
+                    # include retrieval metric for storage compatibility
+                    if 'config1_retrieval_metric' in locals() and config1_retrieval_metric:
+                        config["retrieval_metric"] = config1_retrieval_metric
                     
                     if input_source == "📁 Upload CSV File":
                         result = call_config1_api(
@@ -1210,52 +1411,222 @@ if st.session_state.current_mode:
         if "deep_store_metadata_enabled" not in st.session_state:
             st.session_state.deep_store_metadata_enabled = True
 
-        # File upload section
-        uploaded_file = st.file_uploader("Upload CSV file", type=["csv"], key="deep_file_upload")
+        # Input source selection for Deep Config
+        input_source = st.radio("Select Input Source:", ["📁 Upload CSV File", "🗄️ Database Import"], key="deep_input_source")
         
-        if uploaded_file:
+        if input_source == "📁 Upload CSV File":
+            uploaded_file = st.file_uploader("Upload CSV file", type=["csv"], key="deep_file_upload")
+        else:  # Database Import
+            st.markdown("#### 🗄️ Database Configuration")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                db_type = st.selectbox("Database Type", ["mysql", "postgresql"], key="deep_db_type")
+                host = st.text_input("Host", "localhost", key="deep_host")
+                port = st.number_input("Port", value=3306 if db_type == "mysql" else 5432, key="deep_port")
+            
+            with col2:
+                username = st.text_input("Username", key="deep_username")
+                password = st.text_input("Password", type="password", key="deep_password")
+                database = st.text_input("Database Name", key="deep_database")
+            
+            # Test Connection and List Tables
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("🔌 Test Connection", key="deep_test_conn", help="Tests DB connectivity. Then click \"List Tables\"."):
+                    res = db_test_connection_api({
+                        "db_type": db_type,
+                        "host": host,
+                        "port": port,
+                        "username": username,
+                        "password": password,
+                        "database": database,
+                    })
+                    if res.get("status") == "success":
+                        import time as _t
+                        st.session_state["deep_conn_ok_until"] = _t.time() + 5
+                    else:
+                        st.error(f"❌ Connection failed: {res.get('message', 'Unknown error')}")
+                # Ephemeral success message under the button
+                import time as _t
+                if st.session_state.get("deep_conn_ok_until", 0) > _t.time():
+                    st.markdown(
+                        '<span style="padding:6px 10px; border:1px solid #444; border-radius:6px; background:#2d2d2d; color:#ddd;">Connection successful</span>',
+                        unsafe_allow_html=True
+                    )
+            
+            with col2:
+                if st.button("📋 List Tables", key="deep_list_tables"):
+                    res = db_list_tables_api({
+                        "db_type": db_type,
+                        "host": host,
+                        "port": port,
+                        "username": username,
+                        "password": password,
+                        "database": database,
+                    })
+                    if "error" in res:
+                        st.error(f"❌ Failed to list tables: {res['error']}")
+                    else:
+                        st.session_state.deep_available_tables = res.get("tables", [])
+                        st.success(f"✅ Found {len(st.session_state.deep_available_tables)} tables")
+            
+            # Table selection
+            if hasattr(st.session_state, 'deep_available_tables') and st.session_state.deep_available_tables:
+                table_name = st.selectbox("Select Table", st.session_state.deep_available_tables, key="deep_table_name")
+                
+                # Create DB config for Deep Config
+                use_db_config = {
+                    "use_db": True,
+                    "db_type": db_type,
+                    "host": host,
+                    "port": port,
+                    "username": username,
+                    "password": password,
+                    "database": database,
+                    "table_name": table_name
+                }
+            else:
+                use_db_config = None
+                table_name = None
+            
+            uploaded_file = None  # No file upload for DB mode
+        
+        # Handle data loading for both CSV and DB
+        if uploaded_file or (input_source == "🗄️ Database Import" and use_db_config):
             if st.session_state.deep_config_step == 0:
-                df = pd.read_csv(uploaded_file)
-                # Validate and normalize headers
-                df.columns = validate_and_normalize_headers(df.columns)
-                st.session_state.deep_df = df
+                if uploaded_file:
+                    # CSV file upload
+                    df = pd.read_csv(uploaded_file)
+                    # Validate and normalize headers
+                    df.columns = validate_and_normalize_headers(df.columns)
+                    st.session_state.deep_df = df
+                    st.session_state.deep_file_info = {
+                        "source": "csv",
+                        "filename": uploaded_file.name,
+                        "size": len(uploaded_file.getvalue())
+                    }
+                else:
+                    # DB import - load data via API
+                    with st.spinner("🔄 Loading data from database..."):
+                        st.session_state.deep_db_config = use_db_config
+                        
+                        # Load data directly from database for Deep Config UI preview
+                        try:
+                            from backend import connect_mysql, connect_postgresql, import_table_to_dataframe
+                            
+                            if use_db_config['db_type'] == 'mysql':
+                                conn = connect_mysql(
+                                    use_db_config['host'], 
+                                    use_db_config['port'], 
+                                    use_db_config['username'], 
+                                    use_db_config['password'], 
+                                    use_db_config['database']
+                                )
+                            elif use_db_config['db_type'] == 'postgresql':
+                                conn = connect_postgresql(
+                                    use_db_config['host'], 
+                                    use_db_config['port'], 
+                                    use_db_config['username'], 
+                                    use_db_config['password'], 
+                                    use_db_config['database']
+                                )
+                            
+                            df = import_table_to_dataframe(conn, use_db_config['table_name'])
+                            conn.close()
+                            
+                            # Validate and normalize headers
+                            df.columns = validate_and_normalize_headers(df.columns)
+                            st.session_state.deep_df = df
+                            
+                            st.session_state.deep_file_info = {
+                                "source": f"db:{use_db_config['db_type']}",
+                                "table": use_db_config['table_name'],
+                                "database": use_db_config['database'],
+                                "rows": len(df),
+                                "columns": len(df.columns)
+                            }
+                            
+                            st.success(f"✅ Successfully loaded {len(df)} rows from {use_db_config['table_name']}")
+                            
+                        except Exception as e:
+                            st.error(f"❌ Failed to load database data: {str(e)}")
+                            st.error(f"💡 **Troubleshooting**: Make sure you have the required database drivers installed:")
+                            if use_db_config['db_type'] == 'postgresql':
+                                st.error("   - For PostgreSQL: `pip install psycopg2-binary`")
+                            elif use_db_config['db_type'] == 'mysql':
+                                st.error("   - For MySQL: `pip install mysql-connector-python`")
+                            st.session_state.deep_df = pd.DataFrame()
 
             st.subheader("Data preview")
             
-            # Data summary metrics
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.metric("Total Rows", len(st.session_state.deep_df))
-            with col2:
-                st.metric("Total Columns", len(st.session_state.deep_df.columns))
-            with col3:
-                st.metric("Memory Usage", f"{st.session_state.deep_df.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
-            with col4:
-                null_count = st.session_state.deep_df.isnull().sum().sum()
-                st.metric("Null Values", null_count)
-            
-            # Enhanced scrollable dataframe
-            st.subheader("Data Preview")
-            st.dataframe(
-                st.session_state.deep_df,
-                height=300,
-                use_container_width=True,
-                hide_index=False
-            )
+            if not st.session_state.deep_df.empty:
+                # Data summary metrics
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Total Rows", len(st.session_state.deep_df))
+                with col2:
+                    st.metric("Total Columns", len(st.session_state.deep_df.columns))
+                with col3:
+                    st.metric("Memory Usage", f"{st.session_state.deep_df.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
+                with col4:
+                    null_count = st.session_state.deep_df.isnull().sum().sum()
+                    st.metric("Null Values", null_count)
+                
+                # Enhanced scrollable dataframe
+                st.subheader("Data Preview")
+                st.dataframe(
+                    st.session_state.deep_df,
+                    height=300,
+                    use_container_width=True,
+                    hide_index=False
+                )
+            else:
+                # Show DB import info
+                if hasattr(st.session_state, 'deep_file_info') and st.session_state.deep_file_info.get('source', '').startswith('db:'):
+                    st.info(f"📊 Database Import: {st.session_state.deep_file_info.get('table', 'Unknown table')} from {st.session_state.deep_file_info.get('database', 'Unknown database')}")
+                    st.info("Data will be loaded during pipeline execution")
 
             # Step 1: Default preprocessing
             if st.session_state.deep_config_step == 0:
                 if st.button("Run Default Preprocessing", key="deep_default_preprocessing"):
-                    df, file_meta, numeric_meta = preprocess_csv_enhanced(
-                        st.session_state.deep_df,
-                        fill_null_strategy=None,
-                        type_conversions=None,
-                    )
-                    st.session_state.deep_df = df
-                    st.session_state.deep_file_meta = file_meta
-                    st.session_state.deep_numeric_meta = numeric_meta
-                    st.session_state.deep_config_step = 1
-                    st.rerun()
+                    with st.spinner("🔄 Running preprocessing via API..."):
+                        try:
+                            # Determine input source and call API
+                            if uploaded_file:
+                                # CSV file upload
+                                temp_path = None
+                                try:
+                                    # Create temporary file
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
+                                        tmp_file.write(uploaded_file.getvalue())
+                                        temp_path = tmp_file.name
+                                    
+                                    result = call_deep_config_preprocess_api(temp_path, uploaded_file.name, None)
+                                finally:
+                                    # Clean up temp file
+                                    if temp_path and os.path.exists(temp_path):
+                                        os.unlink(temp_path)
+                            else:
+                                # DB import
+                                result = call_deep_config_preprocess_api(None, None, use_db_config)
+                            
+                            if "error" in result:
+                                st.error(f"❌ Preprocessing failed: {result['error']}")
+                            else:
+                                st.success(f"✅ Preprocessing completed successfully!")
+                                st.info(f"📊 **Results**: {result.get('rows', 'N/A')} rows, {result.get('columns', 'N/A')} columns")
+                                
+                                # Update session state with API results
+                                st.session_state.deep_file_meta = result.get('file_info', {})
+                                st.session_state.deep_numeric_meta = []
+                                st.session_state.deep_config_step = 1
+                                st.rerun()
+                        
+                        except Exception as e:
+                            st.error(f"❌ API Error: {str(e)}")
 
             # Step 2: Type conversion
             if st.session_state.deep_config_step == 1:
@@ -1268,6 +1639,14 @@ if st.session_state.current_mode:
                     st.session_state.deep_embedding_result = None
                     st.session_state.deep_config_step = 0
                     st.rerun()
+                
+                # Check if data is available
+                if st.session_state.deep_df.empty:
+                    st.error("❌ No data available for type conversion. Please go back and load data first.")
+                    if st.button("Back to Data Loading", key="deep_back_to_data_loading_step1"):
+                        st.session_state.deep_config_step = 0
+                        st.rerun()
+                    st.stop()
                 
                 # Smart suggestions based on column names and data patterns
                 def get_smart_suggestion(col_name, col_data):
@@ -1393,17 +1772,24 @@ if st.session_state.current_mode:
                 # Apply type conversion button
                 if st.button("Apply Type Conversion", key="deep_apply_type_conversion"):
                     if type_conversions:
-                        st.write(f"🔄 Converting {len(type_conversions)} columns...")
-                        df, file_meta, numeric_meta = preprocess_csv_enhanced(
-                            st.session_state.deep_df,
-                            fill_null_strategy=None,
-                            type_conversions=type_conversions,
-                        )
-                        st.session_state.deep_df = df
-                        st.session_state.deep_file_meta = file_meta
-                        st.session_state.deep_numeric_meta = numeric_meta
-                        st.session_state.deep_config_step = 2
-                        st.rerun()
+                        with st.spinner(f"🔄 Converting {len(type_conversions)} columns via API..."):
+                            try:
+                                result = call_deep_config_type_convert_api(type_conversions)
+                                
+                                if "error" in result:
+                                    st.error(f"❌ Type conversion failed: {result['error']}")
+                                else:
+                                    st.success(f"✅ Type conversion completed successfully!")
+                                    st.info(f"📊 **Converted**: {len(type_conversions)} columns")
+                                    
+                                    # Update session state with API results
+                                    st.session_state.deep_file_meta = result.get('file_info', {})
+                                    st.session_state.deep_numeric_meta = []
+                                    st.session_state.deep_config_step = 2
+                                    st.rerun()
+                            
+                            except Exception as e:
+                                st.error(f"❌ API Error: {str(e)}")
                     else:
                         st.info("No type conversions selected. Moving to next step.")
                         st.session_state.deep_config_step = 2
@@ -1426,6 +1812,14 @@ if st.session_state.current_mode:
                     st.session_state.deep_embedding_result = None
                     st.session_state.deep_config_step = 1
                     st.rerun()
+                
+                # Check if data is available
+                if st.session_state.deep_df.empty:
+                    st.error("❌ No data available for null handling. Please go back and load data first.")
+                    if st.button("Back to Data Loading", key="deep_back_to_data_loading"):
+                        st.session_state.deep_config_step = 0
+                        st.rerun()
+                    st.stop()
                 
                 st.write("Smart suggestions based on null ratio, dtype, and column semantics.")
 
@@ -1490,10 +1884,24 @@ if st.session_state.current_mode:
                     st.divider()
 
                 if st.button("Apply Null Handling", key="deep_apply_null_handling"):
-                    if null_strategies:
-                        st.session_state.deep_df = apply_null_strategies_enhanced(st.session_state.deep_df, null_strategies, add_flags=True)
-                    st.session_state.deep_config_step = 4
-                    st.rerun()
+                    with st.spinner("🔄 Applying null handling via API..."):
+                        try:
+                            result = call_deep_config_null_handle_api(null_strategies)
+                            
+                            if "error" in result:
+                                st.error(f"❌ Null handling failed: {result['error']}")
+                            else:
+                                st.success(f"✅ Null handling completed successfully!")
+                                st.info(f"📊 **Processed**: {len(null_strategies)} columns with null strategies")
+                                
+                                # Update session state with API results
+                                st.session_state.deep_file_meta = result.get('file_info', {})
+                                st.session_state.deep_numeric_meta = []
+                                st.session_state.deep_config_step = 4
+                                st.rerun()
+                        
+                        except Exception as e:
+                            st.error(f"❌ API Error: {str(e)}")
                     
                 # Skip button
                 if st.button("Apply No Changes (Skip Null Handling)", key="deep_skip_null_handling"):
@@ -1511,6 +1919,14 @@ if st.session_state.current_mode:
                     st.session_state.deep_config_step = 2
                     st.rerun()
 
+                # Check if data is available
+                if st.session_state.deep_df.empty:
+                    st.error("❌ No data available for stop words removal. Please go back and load data first.")
+                    if st.button("Back to Data Loading", key="deep_back_to_data_loading_step4"):
+                        st.session_state.deep_config_step = 0
+                        st.rerun()
+                    st.stop()
+
                 text_cols = st.session_state.deep_df.select_dtypes(include=["object"]).columns
                 if text_cols.empty:
                     st.info("No text column found to apply stop words removal.")
@@ -1526,15 +1942,27 @@ if st.session_state.current_mode:
                     )
 
                     if st.button("Continue", key="deep_continue_stopwords"):
-                        df = st.session_state.deep_df.copy()
-                        if choice == "Apply stop word removal":
-                            df = remove_stopwords_from_text_column_enhanced(df, remove_stopwords=True)
-                            st.session_state.deep_df = df
-                            st.success("Stop words removed from detected text columns.")
-                        else:
-                            st.info("Stop words removal skipped.")
-                        st.session_state.deep_config_step = 5
-                        st.rerun()
+                        with st.spinner("🔄 Processing stop words via API..."):
+                            try:
+                                remove_stopwords = choice == "Apply stop word removal"
+                                result = call_deep_config_stopwords_api(remove_stopwords)
+                                
+                                if "error" in result:
+                                    st.error(f"❌ Stop words processing failed: {result['error']}")
+                                else:
+                                    if remove_stopwords:
+                                        st.success("✅ Stop words removed from detected text columns.")
+                                    else:
+                                        st.info("Stop words removal skipped.")
+                                    
+                                    # Update session state with API results
+                                    st.session_state.deep_file_meta = result.get('file_info', {})
+                                    st.session_state.deep_numeric_meta = []
+                                    st.session_state.deep_config_step = 5
+                                    st.rerun()
+                            
+                            except Exception as e:
+                                st.error(f"❌ API Error: {str(e)}")
 
             # Step 5: Text Normalization
             if st.session_state.deep_config_step == 5:
@@ -1558,19 +1986,54 @@ if st.session_state.current_mode:
                 )
 
                 if st.button("Apply Changes", key="deep_apply_text_norm"):
-                    df = st.session_state.deep_df.copy()
-                    if choice == "Apply lemmatization":
-                        df = process_text_enhanced(df, method='lemmatize')
-                        st.session_state.deep_df = df
-                        st.success("Applied lemmatization")
-                    elif choice == "Apply stemming":
-                        df = process_text_enhanced(df, method='stem')
-                        st.session_state.deep_df = df
-                        st.success("Applied stemming")
-                    else:
-                        st.info("Skipped text normalization")
-                    st.session_state.deep_config_step = 6
-                    st.rerun()
+                    with st.spinner("🔄 Applying text normalization via API..."):
+                        try:
+                            # Determine method based on choice
+                            if choice == "Apply lemmatization":
+                                method = "lemmatize"
+                            elif choice == "Apply stemming":
+                                method = "stem"
+                            else:
+                                method = "none"
+                            
+                            result = call_deep_config_normalize_api(method)
+                            
+                            if "error" in result:
+                                st.error(f"❌ Text normalization failed: {result['error']}")
+                            else:
+                                if method == "lemmatize":
+                                    st.success("✅ Applied lemmatization")
+                                elif method == "stem":
+                                    st.success("✅ Applied stemming")
+                                else:
+                                    st.info("Skipped text normalization")
+                                
+                                # Update session state with API results
+                                st.session_state.deep_file_meta = result.get('file_info', {})
+                                st.session_state.deep_numeric_meta = []
+                                
+                                # Add download button for preprocessed data
+                                st.markdown("---")
+                                st.subheader("📥 Download Preprocessed Data")
+                                if st.button("📄 Download Preprocessed CSV", key="deep_download_preprocessed"):
+                                    try:
+                                        csv_data = download_deep_config_preprocessed()
+                                        filename = "preprocessed_data.csv"
+                                        st.download_button(
+                                            label="⬇️ Download Preprocessed Data",
+                                            data=csv_data,
+                                            file_name=filename,
+                                            mime="text/csv",
+                                            use_container_width=True
+                                        )
+                                    except Exception as e:
+                                        st.error(f"Download failed: {str(e)}")
+                                
+                                st.session_state.deep_config_step = 6
+                                st.rerun()
+                        
+                        except Exception as e:
+                            st.error(f"❌ API Error: {str(e)}")
 
             # Step 6: Final metadata and chunking
             if st.session_state.deep_config_step == 6:
@@ -1587,10 +2050,19 @@ if st.session_state.current_mode:
 
                 # Download preprocessed CSV
                 csv_data = st.session_state.deep_df.to_csv(index=False).encode("utf-8")
+                
+                # Generate appropriate filename based on data source
+                if uploaded_file:
+                    filename = f"processed_{uploaded_file.name}"
+                else:
+                    # DB import case
+                    table_name = st.session_state.deep_file_info.get('table', 'database_table')
+                    filename = f"processed_{table_name}.csv"
+                
                 st.download_button(
                     label="Download preprocessed CSV",
                     data=csv_data,
-                    file_name=f"processed_{uploaded_file.name}",
+                    file_name=filename,
                     mime="text/csv",
                 )
                 
@@ -1705,6 +2177,14 @@ if st.session_state.current_mode:
                 
                 st.sidebar.checkbox("Preprocessing Complete", value=True, disabled=True, key="deep_chunking_preprocessing_complete")
                 
+                # Check if data is available
+                if st.session_state.deep_df.empty:
+                    st.error("❌ No data available for chunking. Please go back and load data first.")
+                    if st.button("Back to Data Loading", key="deep_back_to_data_loading_step7"):
+                        st.session_state.deep_config_step = 0
+                        st.rerun()
+                    st.stop()
+                
                 st.subheader("Select Chunking Method")
 
                 chunking_method = st.radio(
@@ -1739,67 +2219,72 @@ if st.session_state.current_mode:
                     preserve_headers = st.checkbox("Include headers in each chunk", value=True, key="deep_document_preserve_headers")
                 
                 if st.button("Apply Chunking Method", key="deep_apply_chunking"):
-                    try:
-                        progress_bar = st.progress(0)
-                        status_text = st.empty()
+                    with st.spinner("🔄 Applying chunking via API..."):
+                        try:
+                            # Prepare chunking parameters based on method
+                            if chunking_method == "Fixed Size":
+                                chunk_params = {
+                                    "method": "fixed",
+                                    "chunk_size": int(chunk_size),
+                                    "overlap": int(overlap)
+                                }
+                            elif chunking_method == "Recursive":
+                                chunk_params = {
+                                    "method": "recursive",
+                                    "chunk_size": int(chunk_size),
+                                    "overlap": int(overlap)
+                                }
+                            elif chunking_method == "Semantic":
+                                chunk_params = {
+                                    "method": "semantic",
+                                    "n_clusters": int(n_clusters)
+                                }
+                            elif chunking_method == "Document":
+                                chunk_params = {
+                                    "method": "document",
+                                    "key_column": key_column,
+                                    "token_limit": int(token_limit),
+                                    "preserve_headers": preserve_headers
+                                }
+                            
+                            result = call_deep_config_chunk_api(chunk_params)
+                            
+                            if "error" in result:
+                                st.error(f"❌ Chunking failed: {result['error']}")
+                            else:
+                                st.success(f"✅ Successfully created {result.get('total_chunks', 'N/A')} chunks!")
+                                st.info(f"📊 **Method**: {chunking_method}")
+                                
+                                # Update session state with API results
+                                st.session_state.deep_chunking_result = {
+                                    "chunks": result.get('chunks', []),
+                                    "metadata": result.get('metadata', []),
+                                    "method": chunking_method.lower().replace(" ", "_"),
+                                    "total_chunks": result.get('total_chunks', 0)
+                                }
+                                
+                                # Add download button for chunks
+                                st.markdown("---")
+                                st.subheader("📥 Download Chunks")
+                                if st.button("📄 Download Chunks CSV", key="deep_download_chunks"):
+                                    try:
+                                        chunks_data = download_deep_config_chunks()
+                                        filename = "chunks.csv"
+                                        st.download_button(
+                                            label="⬇️ Download Chunks",
+                                            data=chunks_data,
+                                            file_name=filename,
+                                            mime="text/csv",
+                                            use_container_width=True
+                                        )
+                                    except Exception as e:
+                                        st.error(f"Download failed: {str(e)}")
+                                
+                                st.session_state.deep_config_step = 8
+                                st.rerun()
                         
-                        status_text.text("Starting chunking process...")
-                        progress_bar.progress(10)
-                        
-                        if chunking_method == "Fixed Size":
-                            status_text.text("Applying fixed size chunking...")
-                            progress_bar.progress(30)
-                            chunks = chunk_fixed_enhanced(st.session_state.deep_df, int(chunk_size), int(overlap))
-                            chunk_metadata = [{"chunk_id": f"fixed_{i:04d}", "method": "fixed"} for i in range(len(chunks))]
-
-                        elif chunking_method == "Semantic":
-                            status_text.text("Applying semantic cluster chunking...")
-                            progress_bar.progress(30)
-                            chunks = chunk_semantic_cluster_enhanced(st.session_state.deep_df, n_clusters)
-                            chunk_metadata = [{"chunk_id": f"sem_cluster_{i:04d}", "method": "semantic_cluster"} for i in range(len(chunks))]
-
-                        elif chunking_method == "Document":
-                            status_text.text("Applying document-based chunking...")
-                            progress_bar.progress(30)
-                            chunks, chunk_metadata = document_based_chunking_enhanced(st.session_state.deep_df, key_column=key_column, token_limit=int(token_limit), preserve_headers=preserve_headers)
-
-                        elif chunking_method == "Recursive":
-                            status_text.text("Applying recursive KV chunking...")
-                            progress_bar.progress(30)
-                            chunks = chunk_recursive_keyvalue_enhanced(st.session_state.deep_df, int(chunk_size), int(overlap))
-                            chunk_metadata = [{"chunk_id": f"kv_{i:04d}", "method": "recursive_kv"} for i in range(len(chunks))]
-                        
-                        status_text.text("Processing chunks...")
-                        progress_bar.progress(70)
-                        
-                        st.session_state.deep_chunks = chunks
-                        st.session_state.deep_chunking_result = {
-                            "chunks": chunks,
-                            "metadata": chunk_metadata,
-                            "method": chunking_method.lower().replace(" ", "_"),
-                            "total_chunks": len(chunks)
-                        }
-                        
-                        status_text.text("Finalizing...")
-                        progress_bar.progress(90)
-                        
-                        st.session_state.deep_config_step = 8
-                        
-                        status_text.text("Chunking completed!")
-                        progress_bar.progress(100)
-                        
-                        st.success(f"Successfully created {len(chunks)} chunks!")
-                        
-                        progress_bar.empty()
-                        status_text.empty()
-                        
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Chunking failed: {str(e)}")
-                        if 'progress_bar' in locals():
-                            progress_bar.empty()
-                        if 'status_text' in locals():
-                            status_text.empty()
+                        except Exception as e:
+                            st.error(f"❌ API Error: {str(e)}")
 
                 # Back button
                 if st.button("Back to Metadata Selection", key="deep_back_to_metadata"):
@@ -1844,46 +2329,62 @@ if st.session_state.current_mode:
                     openai_base_url = None
                 
                 if st.button("Generate Embeddings", key="deep_generate_embeddings"):
-                    try:
-                        with st.spinner("Generating embeddings..."):
-                            # Prepare text for each chunk
-                            chunks = st.session_state.deep_chunks
-                            chunk_texts = []
-                            for chunk in chunks:
-                                if isinstance(chunk, str):
-                                    chunk_texts.append(chunk)
-                                else:
-                                    # Fallback: join row values
-                                    text_rows = []
-                                    for _, row in chunk.iterrows():
-                                        row_text = " | ".join([f"{col}: {row[col]}" for col in chunk.columns if pd.notna(row[col])])
-                                        text_rows.append(row_text)
-                                    chunk_texts.append("\n".join(text_rows))
-
-                            # Call enhanced backend
-                            _, embeddings = embed_texts_enhanced(
-                                chunk_texts,
-                                model_name=model_choice,
-                                openai_api_key=openai_api_key or None,
-                                openai_base_url=openai_base_url or None,
-                                batch_size=int(batch_size),
-                                use_parallel=bool(use_parallel)
-                            )
-
-                            # Save result
-                            st.session_state.deep_embedding_result = {
-                                'model_used': model_choice,
-                                'total_chunks': len(chunk_texts),
-                                'vector_dimension': int(embeddings.shape[1]) if len(embeddings.shape) == 2 else len(embeddings[0]) if len(embeddings) else 0,
-                                'embeddings': embeddings,
-                                'chunk_texts': chunk_texts,
+                    with st.spinner("🔄 Generating embeddings via API..."):
+                        try:
+                            # Prepare embedding parameters
+                            embed_params = {
+                                "model_name": model_choice,
+                                "batch_size": int(batch_size),
+                                "use_parallel": bool(use_parallel)
                             }
-                            st.session_state.deep_config_step = 9
-                            st.success(f"Successfully generated embeddings for {len(chunk_texts)} chunks!")
-                            st.rerun()
                             
-                    except Exception as e:
-                        st.error(f"Embedding generation failed: {str(e)}")
+                            # Add OpenAI parameters if using OpenAI model
+                            if "text-embedding" in model_choice:
+                                if openai_api_key:
+                                    embed_params["openai_api_key"] = openai_api_key
+                                if openai_base_url:
+                                    embed_params["openai_base_url"] = openai_base_url
+                            
+                            result = call_deep_config_embed_api(embed_params)
+                            
+                            if "error" in result:
+                                st.error(f"❌ Embedding generation failed: {result['error']}")
+                            else:
+                                st.success(f"✅ Successfully generated embeddings for {result.get('total_chunks', 'N/A')} chunks!")
+                                st.info(f"📊 **Model**: {model_choice}")
+                                st.info(f"📊 **Vector Dimension**: {result.get('vector_dimension', 'N/A')}")
+                                
+                                # Update session state with API results
+                                st.session_state.deep_embedding_result = {
+                                    'model_used': model_choice,
+                                    'total_chunks': result.get('total_chunks', 0),
+                                    'vector_dimension': result.get('vector_dimension', 0),
+                                    'embeddings': result.get('embeddings', []),
+                                    'chunk_texts': result.get('chunk_texts', []),
+                                }
+                                
+                                # Add download button for embeddings
+                                st.markdown("---")
+                                st.subheader("📥 Download Embeddings")
+                                if st.button("📄 Download Embeddings JSON", key="deep_download_embeddings"):
+                                    try:
+                                        embeddings_data = download_deep_config_embeddings()
+                                        filename = "embeddings.json"
+                                        st.download_button(
+                                            label="⬇️ Download Embeddings",
+                                            data=embeddings_data,
+                                            file_name=filename,
+                                            mime="application/json",
+                                            use_container_width=True
+                                        )
+                                    except Exception as e:
+                                        st.error(f"Download failed: {str(e)}")
+                                
+                                st.session_state.deep_config_step = 9
+                                st.rerun()
+                        
+                        except Exception as e:
+                            st.error(f"❌ API Error: {str(e)}")
 
                 # Back button
                 if st.button("Back to Chunking", key="deep_back_to_chunking"):
@@ -1907,31 +2408,49 @@ if st.session_state.current_mode:
                 else:
                     st.session_state.collection_name = "csv_chunks"
 
+                # Retrieval metric selection (shown below storage selection)
+                retrieval_metric = st.selectbox(
+                    "Retrieval similarity metric",
+                    ["cosine", "dot", "euclidean"],
+                    index=0,
+                    key="deep_retrieval_metric"
+                )
+                # removed deep config captions per request (Config-1 only requested, keeping deep captions optional)
+
                 col_a, col_b = st.columns(2)
                 with col_a:
                     if st.button("Store Embeddings", key="deep_store_embeddings"):
-                        try:
-                            if st.session_state.deep_embedding_result is None:
-                                st.error("No embeddings to store. Please generate embeddings first.")
-                            else:
-                                result = st.session_state.deep_embedding_result
-                                texts = result.get('chunk_texts', [])
-                                embeddings = result.get('embeddings', [])
-                                docs = [str(t) for t in texts]
-                                import numpy as np
-                                embs = np.array(embeddings, dtype='float32')
-
-                                # Get chunk metadata
-                                chunk_metadata = st.session_state.deep_chunking_result.get('metadata', []) if st.session_state.deep_chunking_result else []
-
-                                if storage_choice == "ChromaDB":
-                                    store_chroma_enhanced(docs, embs, collection_name, chunk_metadata)
-                                    st.success(f"Stored {len(docs)} vectors in ChromaDB collection '{collection_name}'.")
+                        with st.spinner("🔄 Storing embeddings via API..."):
+                            try:
+                                if st.session_state.deep_embedding_result is None:
+                                    st.error("No embeddings to store. Please generate embeddings first.")
                                 else:
-                                    store_faiss_enhanced(docs, embs, chunk_metadata)
-                                    st.success(f"Stored {len(docs)} vectors in FAISS index.")
-                        except Exception as e:
-                            st.error(f"Storage failed: {e}")
+                                    # Prepare storage parameters
+                                    storage_type_mapping = {
+                                        "ChromaDB": "chroma",
+                                        "FAISS": "faiss"
+                                    }
+                                    store_params = {
+                                        "storage_type": storage_type_mapping[storage_choice],
+                                        "retrieval_metric": retrieval_metric
+                                    }
+                                    
+                                    if storage_choice == "ChromaDB":
+                                        store_params["collection_name"] = collection_name
+                                    
+                                    result = call_deep_config_store_api(store_params)
+                                    
+                                    if "error" in result:
+                                        st.error(f"❌ Storage failed: {result['error']}")
+                                    else:
+                                        if storage_choice == "ChromaDB":
+                                            st.success(f"✅ Stored {result.get('total_vectors', 'N/A')} vectors in ChromaDB collection '{collection_name}'.")
+                                        else:
+                                            st.success(f"✅ Stored {result.get('total_vectors', 'N/A')} vectors in FAISS index.")
+                                        st.info(f"📊 **Storage Type**: {storage_choice}")
+                                        st.info(f"📊 **Retrieval Metric**: {retrieval_metric}")
+                            except Exception as e:
+                                st.error(f"❌ API Error: {str(e)}")
                 
                 with col_b:
                     query = st.text_input("Enter query to retrieve relevant chunks", value="", key="deep_retrieval_query")
@@ -2002,7 +2521,7 @@ if st.session_state.current_mode:
                                         st.error(f"FAISS search failed: {e}")
                                         docs, metas, dists = [], [], []
                                 
-                                st.success(f"Query completed successfully!")
+                                st.success(f"Query completed successfully! (metric: {retrieval_metric})")
                                 
                                 st.subheader("Top Results")
                                 
@@ -2080,14 +2599,16 @@ if st.session_state.api_results:
     
     with col1:
         st.markdown("#### 📥 Download Chunks")
-        if st.button("📄 Export Chunks as TXT", use_container_width=True):
+        # Config-1: export as CSV; others: TXT
+        chunks_btn_label = "📄 Export Chunks as CSV" if st.session_state.current_mode == "config1" else "📄 Export Chunks as TXT"
+        if st.button(chunks_btn_label, use_container_width=True):
             try:
-                chunks_content = download_file("/export/chunks", "chunks.txt")
+                chunks_content = download_file("/export/chunks", "chunks.csv" if st.session_state.current_mode == "config1" else "chunks.txt")
                 st.download_button(
                     label="⬇️ Download Chunks",
                     data=chunks_content,
-                    file_name="chunks.txt",
-                    mime="text/plain",
+                    file_name=("chunks.csv" if st.session_state.current_mode == "config1" else "chunks.txt"),
+                    mime=("text/csv" if st.session_state.current_mode == "config1" else "text/plain"),
                     use_container_width=True
                 )
             except Exception as e:
@@ -2095,14 +2616,16 @@ if st.session_state.api_results:
     
     with col2:
         st.markdown("#### 📥 Download Embeddings")
-        if st.button("🔢 Export Embeddings as TXT", use_container_width=True):
+        # Config-1: export as JSON; others: TXT
+        emb_btn_label = "🔢 Export Embeddings as JSON" if st.session_state.current_mode == "config1" else "🔢 Export Embeddings as TXT"
+        if st.button(emb_btn_label, use_container_width=True):
             try:
                 embeddings_content = download_embeddings_text()
                 st.download_button(
                     label="⬇️ Download Embeddings",
                     data=embeddings_content,
-                    file_name="embeddings.txt",
-                    mime="text/plain",
+                    file_name=("embeddings.json" if st.session_state.current_mode == "config1" else "embeddings.txt"),
+                    mime=("application/json" if st.session_state.current_mode == "config1" else "text/plain"),
                     use_container_width=True
                 )
             except Exception as e:

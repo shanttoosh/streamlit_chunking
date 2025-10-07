@@ -1,4 +1,4 @@
-# 📦 Chunking Optimizer v2.0
+# 📦 Chunking Optimizer v1.0
 
 A powerful text processing and semantic search application that converts CSV files and database tables into searchable vector embeddings with advanced preprocessing, chunking, and retrieval capabilities.
 
@@ -15,12 +15,20 @@ A powerful text processing and semantic search application that converts CSV fil
 - **Real-time Monitoring**: Process tracking, system information, and performance metrics
 
 ### **Enhanced Deep Config Mode**
-- **Step-by-Step Workflow**: 9-step guided process for comprehensive data processing
+- **Step-by-Step API Integration**: 9-step guided process with individual API endpoints
 - **Smart Preprocessing**: AI-powered suggestions for data type conversion and null handling
 - **Advanced Text Processing**: Stopwords removal, lemmatization, and stemming
 - **Metadata Management**: Intelligent selection and storage of metadata for filtering
 - **Parallel Processing**: Turbo mode for 2-3x faster processing
 - **Interactive Interface**: Real-time previews and progress tracking
+- **Download Intermediate Results**: CSV/JSON downloads after each processing step
+
+### **Config-1 Mode Enhancements**
+- **Document-Based Chunking**: Added document chunking method with key column grouping
+- **Retrieval Metric Selection**: Choose between cosine, dot product, and euclidean similarity
+- **Removed Null Handling**: Streamlined interface focusing on core functionality
+- **Updated Download Formats**: CSV for chunks, JSON for embeddings
+- **Database Import Support**: Full database integration with connection testing
 
 ## 🏗️ Architecture
 
@@ -34,6 +42,7 @@ A powerful text processing and semantic search application that converts CSV fil
 │ • Search UI     │    │ • DB Import     │    │ • Embeddings    │
 │ • Results       │    │ • Vector Storage│    │ • Vector DB     │
 │ • Export        │    │ • Export        │    │ • Retrieval     │
+│ • Step-by-Step  │    │ • State Mgmt    │    │ • State Persist │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -59,6 +68,9 @@ pip install -r requirements.txt
 
 ### 3. Install Optional Dependencies
 ```bash
+# For database connectivity
+pip install psycopg2-binary mysql-connector-python
+
 # For advanced text processing
 pip install spacy
 python -m spacy download en_core_web_sm
@@ -90,26 +102,34 @@ streamlit run app.py
 - paraphrase-MiniLM-L6-v2 embedding model
 - FAISS storage for fast retrieval
 - Turbo mode enabled by default
+- **Database Import**: Full support for MySQL/PostgreSQL
 
 ### **Config-1 Mode** ⚙️
 **Best for**: Balanced control and performance
-- Customizable preprocessing and chunking
-- Multiple embedding model options
-- FAISS or ChromaDB storage
-- Configurable performance settings
+- **4 Chunking Methods**: Fixed, Recursive, Semantic, Document
+- **Retrieval Metrics**: Cosine, Dot Product, Euclidean similarity
+- **Multiple Models**: Local and OpenAI embedding options
+- **Storage Options**: FAISS or ChromaDB with metric compatibility
+- **Database Import**: Complete database integration
+- **Download Formats**: CSV chunks, JSON embeddings
 
 ### **Deep Config Mode** 🔬
 **Best for**: Maximum control and quality
-- **9-Step Workflow**:
-  1. **File Upload** - CSV upload with data preview
-  2. **Default Preprocessing** - Header validation and normalization
-  3. **Type Conversion** - Smart suggestions with interactive interface
-  4. **Null Handling** - Advanced null strategy selection
-  5. **Stop Words Removal** - Optional text cleaning
-  6. **Text Normalization** - Lemmatization/stemming options
+- **9-Step API Workflow**:
+  1. **File Upload/DB Import** - CSV upload or database connection with data preview
+  2. **Default Preprocessing** - Header validation and normalization via API
+  3. **Type Conversion** - Smart suggestions with interactive interface via API
+  4. **Null Handling** - Advanced null strategy selection via API
+  5. **Stop Words Removal** - Optional text cleaning via API
+  6. **Text Normalization** - Lemmatization/stemming options via API
   7. **Metadata Selection** - ChromaDB metadata configuration
-  8. **Chunking** - 4 chunking methods with progress tracking
-  9. **Embedding & Storage** - Model selection, storage, and retrieval
+  8. **Chunking** - 4 chunking methods with progress tracking via API
+  9. **Embedding & Storage** - Model selection, storage, and retrieval via API
+
+- **Step-by-Step Downloads**: 
+  - Preprocessed CSV after text normalization
+  - Chunks CSV after chunking process
+  - Embeddings JSON after embedding generation
 
 ## 🔧 Processing Modes Comparison
 
@@ -117,11 +137,14 @@ streamlit run app.py
 |---------|-----------|---------------|------------------|
 | **Preprocessing** | Auto | Basic | Advanced with smart suggestions |
 | **Type Conversion** | None | Manual | AI-powered suggestions |
-| **Null Handling** | Auto drop | Customizable | Advanced strategies |
+| **Null Handling** | Auto drop | Removed | Advanced strategies |
 | **Text Processing** | None | Basic | Stopwords, lemmatization, stemming |
-| **Chunking Methods** | Semantic only | 3 methods | 4 methods with metadata |
+| **Chunking Methods** | Semantic only | 4 methods | 4 methods with metadata |
 | **Embedding Models** | 1 model | 3 models | 3 models + OpenAI |
 | **Storage Options** | FAISS only | FAISS/ChromaDB | FAISS/ChromaDB with metadata |
+| **Retrieval Metrics** | Fixed | 3 options | 3 options |
+| **Database Import** | ✅ | ✅ | ✅ |
+| **API Integration** | Single call | Single call | Step-by-step |
 | **Performance** | Fastest | Balanced | Most comprehensive |
 | **User Control** | Minimal | Moderate | Maximum |
 
@@ -146,6 +169,8 @@ streamlit run app.py
 - Group by key columns with token limits
 - Best for: Structured data, preserving relationships
 - Parameters: Key column, Token limit (200-10000), Headers option
+- **Config-1**: Headers NOT included in chunks
+- **Deep Config**: Headers optional (user choice)
 
 ## 🤖 Embedding Models
 
@@ -164,13 +189,20 @@ streamlit run app.py
 - **Pros**: Fast search, memory efficient, good for large datasets
 - **Cons**: No metadata filtering, in-memory only
 - **Best for**: Large datasets, fast retrieval
+- **Metrics**: L2 (euclidean), Inner Product (dot), Cosine (with normalization)
 
 ### **ChromaDB**
 - **Pros**: Persistent storage, metadata filtering, easy to use
 - **Cons**: Slower than FAISS, more memory usage
 - **Best for**: Metadata-rich data, persistent storage
+- **Metrics**: cosine, ip (inner product), l2 (euclidean)
 
 ## 🗄️ Database Integration
+
+### **Supported Databases**
+- **MySQL**: Full support with connection testing
+- **PostgreSQL**: Full support with connection testing
+- **Features**: Table listing, data preview, large table handling
 
 ### **MySQL Setup**
 ```sql
@@ -207,6 +239,7 @@ streamlit_chunking/
 ├── backend.py            # Core processing logic and enhanced functions
 ├── requirements.txt      # Python dependencies
 ├── README.md            # This documentation
+├── current_state.pkl    # Global state persistence
 ├── chromadb_store/      # ChromaDB persistent storage (auto-created)
 ├── faiss_store/         # FAISS index storage (auto-created)
 └── temp_files/          # Temporary file storage (auto-created)
@@ -218,6 +251,21 @@ streamlit_chunking/
 - `POST /run_fast` - Fast mode processing
 - `POST /run_config1` - Config-1 mode processing
 - `POST /run_deep_config` - Deep config mode processing
+
+### **Deep Config Step-by-Step Endpoints**
+- `POST /deep_config/preprocess` - Step 1: Load and preprocess data
+- `POST /deep_config/type_convert` - Step 2: Convert data types
+- `POST /deep_config/null_handle` - Step 3: Handle null values
+- `POST /deep_config/stopwords` - Step 4: Remove stop words
+- `POST /deep_config/normalize` - Step 5: Text normalization
+- `POST /deep_config/chunk` - Step 6: Chunk data
+- `POST /deep_config/embed` - Step 7: Generate embeddings
+- `POST /deep_config/store` - Step 8: Store embeddings
+
+### **Download Endpoints**
+- `GET /deep_config/export/preprocessed` - Download preprocessed CSV
+- `GET /deep_config/export/chunks` - Download chunks CSV
+- `GET /deep_config/export/embeddings` - Download embeddings JSON
 
 ### **Database Endpoints**
 - `POST /db/test_connection` - Test database connection
@@ -272,6 +320,15 @@ streamlit_chunking/
    - Enable large file processing mode
    - Use batch processing for very large datasets
 
+7. **"N/A chunks created" Error**
+   - Ensure API endpoints are running
+   - Check that preprocessing step completed successfully
+   - Verify data is loaded before chunking
+
+8. **"Unknown storage type: chromadb" Error**
+   - This has been fixed in v1.0
+   - ChromaDB storage now works correctly
+
 ### **Performance Optimization**
 
 - **Small files (< 10MB)**: Any mode works well
@@ -310,6 +367,24 @@ streamlit_chunking/
 - Literature review and analysis
 - Patent search and analysis
 - Technical documentation processing
+
+## 🔄 Recent Updates (v1.0)
+
+### **Major Improvements**
+- ✅ **Step-by-Step API Integration**: Deep Config now uses individual API endpoints for each step
+- ✅ **Database Import**: Full MySQL/PostgreSQL support across all modes
+- ✅ **Config-1 Enhancements**: Added document chunking, retrieval metrics, removed null handling
+- ✅ **Download Formats**: Updated to CSV for chunks, JSON for embeddings
+- ✅ **State Persistence**: Global state management across API calls
+- ✅ **Error Fixes**: Resolved "N/A chunks" and storage type issues
+- ✅ **UI Improvements**: Better error handling, progress tracking, intermediate downloads
+
+### **Bug Fixes**
+- ✅ Fixed "N/A chunks created" error
+- ✅ Fixed "Unknown storage type: chromadb" error
+- ✅ Fixed API parameter mismatches
+- ✅ Fixed global variable declaration issues
+- ✅ Fixed database import search functionality
 
 ## 🤝 Contributing
 

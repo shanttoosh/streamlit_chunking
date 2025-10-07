@@ -30,7 +30,15 @@ from backend import (
     import_large_table_to_dataframe,
     process_file_direct,
     EMBEDDING_BATCH_SIZE,
-    PARALLEL_WORKERS
+    PARALLEL_WORKERS,
+    set_file_info,
+    save_state,
+    current_df,
+    current_chunks,
+    current_embeddings,
+    current_model,
+    current_store_info,
+    current_metadata
 )
 
 app = FastAPI(title="Chunking Optimizer API", version="2.0")
@@ -231,25 +239,14 @@ async def db_import_one(
             )
             return {"mode": "config1", "summary": result}
         elif processing_mode == "deep":
-            result = run_deep_pipeline(
-                df,
-                null_handling="keep",
-                fill_value="Unknown",
-                remove_stopwords=False,
-                lowercase=True,
-                text_processing_option="none",
-                chunk_method="recursive",
-                chunk_size=400,
-                overlap=50,
-                model_choice="text-embedding-ada-002" if use_openai else "paraphrase-MiniLM-L6-v2",
-                storage_choice="faiss",
-                file_info=file_info,
-                use_openai=use_openai,
-                openai_api_key=openai_api_key,
-                openai_base_url=openai_base_url,
-                use_turbo=use_turbo,
-                batch_size=batch_size
-            )
+            # Create config dict for deep config pipeline
+            config_dict = {
+                "preprocessing": {"fill_null_strategy": None, "type_conversions": None, "remove_stopwords_flag": False},
+                "chunking": {"method": "recursive", "chunk_size": 400, "overlap": 50},
+                "embedding": {"model_name": "text-embedding-ada-002" if use_openai else "paraphrase-MiniLM-L6-v2", "batch_size": batch_size, "use_parallel": use_turbo},
+                "storage": {"type": "faiss"}
+            }
+            result = run_deep_config_pipeline(df, config_dict, file_info)
             return {"mode": "deep", "summary": result}
         else:
             return {"error": f"Unknown processing mode: {processing_mode}"}
@@ -296,7 +293,8 @@ async def run_fast(
             file_info = {"source": f"db:{db_type}", "table": table_name, "size": file_size}
             
             result = run_fast_pipeline(
-                df, db_type, 
+                df, 
+                db_type=db_type,
                 file_info=file_info,
                 use_openai=use_openai,
                 openai_api_key=openai_api_key,
@@ -338,7 +336,8 @@ async def run_fast(
                     }
                     
                     result = run_fast_pipeline(
-                        df, db_type, 
+                        df, 
+                        db_type=db_type,
                         file_info=file_info,
                         use_openai=use_openai,
                         openai_api_key=openai_api_key,
@@ -383,11 +382,12 @@ async def run_config1(
     password: str = Form(None),
     database: str = Form(None),
     table_name: str = Form(None),
-    null_handling: str = Form("keep"),
-    fill_value: str = Form("Unknown"),
     chunk_method: str = Form("recursive"),
     chunk_size: int = Form(400),
     overlap: int = Form(50),
+    document_key_column: str = Form(None),
+    token_limit: int = Form(2000),
+    retrieval_metric: str = Form("cosine"),
     model_choice: str = Form("paraphrase-MiniLM-L6-v2"),
     storage_choice: str = Form("faiss"),
     use_openai: bool = Form(False),
@@ -469,8 +469,11 @@ async def run_config1(
         
         # For smaller files or database imports, use the original pipeline
         result = run_config1_pipeline(
-            df, null_handling, fill_value, chunk_method,
+            df, chunk_method,
             chunk_size, overlap, model_choice, storage_choice, 
+            document_key_column=document_key_column,
+            token_limit=token_limit,
+            retrieval_metric=retrieval_metric,
             file_info=file_info,
             use_openai=use_openai,
             openai_api_key=openai_api_key,
@@ -484,11 +487,311 @@ async def run_config1(
         return {"error": str(e)}
 
 # ---------------------------
+# DEEP CONFIG STEP-BY-STEP API ENDPOINTS
+# ---------------------------
+
+@app.post("/deep_config/preprocess")
+async def deep_config_preprocess(
+    file: Optional[UploadFile] = File(None),
+    db_type: str = Form("sqlite"),
+    host: str = Form(None),
+    port: int = Form(None),
+    username: str = Form(None),
+    password: str = Form(None),
+    database: str = Form(None),
+    table_name: str = Form(None)
+):
+    """Step 1: Preprocess data (load and basic cleaning)"""
+    global current_df
+    try:
+        # Handle database input
+        if db_type and host and table_name and db_type != "sqlite":
+            if db_type == "mysql":
+                conn = connect_mysql(host, port, username, password, database)
+            elif db_type == "postgresql":
+                conn = connect_postgresql(host, port, username, password, database)
+            else:
+                return {"error": "Unsupported db_type"}
+            
+            df = import_table_to_dataframe(conn, table_name)
+            conn.close()
+            file_info = {"source": f"db:{db_type}", "table": table_name}
+        
+        # Handle file input
+        elif file:
+            df = pd.read_csv(file.file)
+            file_info = {"source": "csv", "filename": file.filename}
+        else:
+            return {"error": "Either file upload or database parameters required"}
+        
+        # Basic preprocessing
+        from backend import validate_and_normalize_headers_enhanced
+        df.columns = validate_and_normalize_headers_enhanced(df.columns)
+        
+        # Store in global state
+        current_df = df.copy()
+        set_file_info(file_info)
+        
+        return {
+            "status": "success",
+            "rows": len(df),
+            "columns": len(df.columns),
+            "column_names": list(df.columns),
+            "data_types": {col: str(dtype) for col, dtype in df.dtypes.items()},
+            "file_info": file_info
+        }
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/deep_config/type_convert")
+async def deep_config_type_convert(
+    type_conversions: str = Form("{}")
+):
+    """Step 2: Convert data types"""
+    global current_df
+    try:
+        import json
+        conversions = json.loads(type_conversions) if type_conversions else {}
+        
+        if current_df is None:
+            return {"error": "No data available. Run preprocessing first."}
+        
+        from backend import apply_type_conversion_enhanced
+        df_converted = apply_type_conversion_enhanced(current_df, conversions)
+        
+        # Update global state
+        current_df = df_converted.copy()
+        
+        return {
+            "status": "success",
+            "rows": len(df_converted),
+            "columns": len(df_converted.columns),
+            "data_types": {col: str(dtype) for col, dtype in df_converted.dtypes.items()},
+            "conversions_applied": conversions
+        }
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/deep_config/null_handle")
+async def deep_config_null_handle(
+    null_strategies: str = Form("{}")
+):
+    """Step 3: Handle null values"""
+    global current_df
+    try:
+        import json
+        strategies = json.loads(null_strategies) if null_strategies else {}
+        
+        if current_df is None:
+            return {"error": "No data available. Run preprocessing first."}
+        
+        from backend import apply_null_strategies_enhanced
+        df_processed = apply_null_strategies_enhanced(current_df, strategies)
+        
+        # Update global state
+        current_df = df_processed.copy()
+        
+        return {
+            "status": "success",
+            "rows": len(df_processed),
+            "columns": len(df_processed.columns),
+            "null_count": int(df_processed.isnull().sum().sum()),
+            "strategies_applied": strategies
+        }
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/deep_config/stopwords")
+async def deep_config_stopwords(
+    remove_stopwords: bool = Form(False)
+):
+    """Step 4: Remove stop words"""
+    global current_df
+    try:
+        if current_df is None:
+            return {"error": "No data available. Run preprocessing first."}
+        
+        from backend import remove_stopwords_from_text_column_enhanced
+        df_processed = remove_stopwords_from_text_column_enhanced(current_df, remove_stopwords)
+        
+        # Update global state
+        current_df = df_processed.copy()
+        
+        return {
+            "status": "success",
+            "rows": len(df_processed),
+            "columns": len(df_processed.columns),
+            "stopwords_removed": remove_stopwords
+        }
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/deep_config/normalize")
+async def deep_config_normalize(
+    text_processing: str = Form("none")
+):
+    """Step 5: Text normalization"""
+    global current_df
+    try:
+        if current_df is None:
+            return {"error": "No data available. Run preprocessing first."}
+        
+        from backend import process_text_enhanced
+        df_processed = process_text_enhanced(current_df, text_processing)
+        
+        # Update global state
+        current_df = df_processed.copy()
+        
+        return {
+            "status": "success",
+            "rows": len(df_processed),
+            "columns": len(df_processed.columns),
+            "text_processing": text_processing
+        }
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/deep_config/chunk")
+async def deep_config_chunk(
+    chunk_method: str = Form("fixed"),
+    chunk_size: int = Form(400),
+    overlap: int = Form(50),
+    key_column: str = Form(None),
+    token_limit: int = Form(2000),
+    n_clusters: int = Form(10)
+):
+    """Step 6: Chunk data"""
+    global current_df, current_chunks, current_metadata
+    try:
+        if current_df is None:
+            return {"error": "No data available. Run preprocessing first."}
+        
+        from backend import (
+            chunk_fixed_enhanced, chunk_recursive_keyvalue_enhanced,
+            chunk_semantic_cluster_enhanced, document_based_chunking_enhanced
+        )
+        
+        if chunk_method == "fixed":
+            chunks = chunk_fixed_enhanced(current_df, chunk_size, overlap)
+            metadata = [{"chunk_id": f"fixed_{i:04d}", "method": "fixed"} for i in range(len(chunks))]
+        elif chunk_method == "recursive":
+            chunks = chunk_recursive_keyvalue_enhanced(current_df, chunk_size, overlap)
+            metadata = [{"chunk_id": f"kv_{i:04d}", "method": "recursive_kv"} for i in range(len(chunks))]
+        elif chunk_method == "semantic":
+            chunks = chunk_semantic_cluster_enhanced(current_df, n_clusters)
+            metadata = [{"chunk_id": f"sem_cluster_{i:04d}", "method": "semantic_cluster"} for i in range(len(chunks))]
+        elif chunk_method == "document":
+            chunks, metadata = document_based_chunking_enhanced(current_df, key_column, token_limit)
+        else:
+            return {"error": f"Unknown chunking method: {chunk_method}"}
+        
+        # Store in global state
+        current_chunks = chunks
+        current_metadata = metadata
+        
+        return {
+            "status": "success",
+            "total_chunks": len(chunks),
+            "chunks": chunks,
+            "chunk_method": chunk_method,
+            "chunk_size": chunk_size,
+            "overlap": overlap,
+            "metadata": metadata
+        }
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/deep_config/embed")
+async def deep_config_embed(
+    model_name: str = Form("paraphrase-MiniLM-L6-v2"),
+    use_openai: bool = Form(False),
+    openai_api_key: str = Form(None),
+    openai_base_url: str = Form(None),
+    batch_size: int = Form(64)
+):
+    """Step 7: Generate embeddings"""
+    global current_chunks, current_model, current_embeddings
+    try:
+        if current_chunks is None:
+            return {"error": "No chunks available. Run chunking first."}
+        
+        from backend import embed_texts_enhanced
+        model, embeddings = embed_texts_enhanced(
+            current_chunks, model_name, openai_api_key, openai_base_url, batch_size
+        )
+        
+        # Store in global state
+        current_model = model
+        current_embeddings = embeddings
+        
+        return {
+            "status": "success",
+            "total_chunks": len(embeddings),
+            "vector_dimension": embeddings.shape[1] if len(embeddings.shape) > 1 else 0,
+            "embeddings": embeddings.tolist() if hasattr(embeddings, 'tolist') else embeddings,
+            "chunk_texts": current_chunks,
+            "model_name": model_name,
+            "use_openai": use_openai
+        }
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/deep_config/store")
+async def deep_config_store(
+    storage_type: str = Form("chroma"),
+    collection_name: str = Form("deep_config_collection")
+):
+    """Step 8: Store embeddings"""
+    global current_chunks, current_embeddings, current_metadata, current_store_info
+    try:
+        if current_chunks is None or current_embeddings is None:
+            return {"error": "No chunks or embeddings available. Run chunking and embedding first."}
+        
+        from backend import store_chroma_enhanced, store_faiss_enhanced
+        
+        if storage_type == "chroma":
+            store = store_chroma_enhanced(current_chunks, current_embeddings, collection_name, current_metadata)
+        elif storage_type == "faiss":
+            store = store_faiss_enhanced(current_chunks, current_embeddings, current_metadata)
+        else:
+            return {"error": f"Unknown storage type: {storage_type}"}
+        
+        # Store in global state
+        current_store_info = store
+        
+        # Save state for retrieval
+        save_state()
+        
+        return {
+            "status": "success",
+            "storage_type": storage_type,
+            "collection_name": collection_name if storage_type == "chroma" else "faiss_index",
+            "total_vectors": len(current_chunks)
+        }
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+# ---------------------------
 # Enhanced DEEP CONFIG ENDPOINT
 # ---------------------------
 @app.post("/run_deep_config")
 async def run_deep_config(
     file: Optional[UploadFile] = File(None),
+    db_type: str = Form("sqlite"),
+    host: str = Form(None),
+    port: int = Form(None),
+    username: str = Form(None),
+    password: str = Form(None),
+    database: str = Form(None),
+    table_name: str = Form(None),
     preprocessing_config: str = Form("{}"),
     chunking_config: str = Form("{}"),
     embedding_config: str = Form("{}"),
@@ -511,8 +814,27 @@ async def run_deep_config(
         except json.JSONDecodeError as e:
             return {"error": f"Invalid JSON configuration: {str(e)}"}
         
+        # Handle database input
+        if db_type and host and table_name and db_type != "sqlite":
+            if db_type == "mysql":
+                conn = connect_mysql(host, port, username, password, database)
+            elif db_type == "postgresql":
+                conn = connect_postgresql(host, port, username, password, database)
+            else:
+                return {"error": "Unsupported db_type"}
+            
+            # Use chunked import for large tables
+            file_size = get_table_size(conn, table_name)
+            if file_size > LARGE_FILE_THRESHOLD:
+                df = import_large_table_to_dataframe(conn, table_name)
+            else:
+                df = import_table_to_dataframe(conn, table_name)
+                
+            conn.close()
+            file_info = {"source": f"db:{db_type}", "table": table_name, "size": file_size}
+        
         # Handle file input
-        if file:
+        elif file:
             # Create temporary file and stream upload directly to disk
             with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp_file:
                 shutil.copyfileobj(file.file, tmp_file)
@@ -562,7 +884,7 @@ async def run_deep_config(
                 if os.path.exists(tmp_path):
                     os.unlink(tmp_path)
         else:
-            return {"error": "File upload required for deep config mode"}
+            return {"error": "Either file upload or database parameters required for deep config mode"}
         
         # Combine all configurations
         config_dict = {
@@ -691,6 +1013,66 @@ async def export_embeddings_text_file():
         temp_path = f.name
     
     return FileResponse(temp_path, filename="embeddings.txt", media_type="text/plain")
+
+# ---------------------------
+# DEEP CONFIG STEP-BY-STEP DOWNLOAD ENDPOINTS
+# ---------------------------
+
+@app.get("/deep_config/export/preprocessed")
+async def export_deep_config_preprocessed():
+    """Export preprocessed data as CSV"""
+    if current_df is None:
+        return {"error": "No preprocessed data available"}
+    
+    csv_data = current_df.to_csv(index=False)
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+        f.write(csv_data)
+        temp_path = f.name
+    
+    return FileResponse(temp_path, filename="preprocessed_data.csv", media_type="text/csv")
+
+@app.get("/deep_config/export/chunks")
+async def export_deep_config_chunks():
+    """Export chunks as CSV"""
+    if current_chunks is None:
+        return {"error": "No chunks available"}
+    
+    # Create DataFrame with chunks and metadata
+    chunks_df = pd.DataFrame({
+        'chunk_id': [f"chunk_{i:04d}" for i in range(len(current_chunks))],
+        'content': current_chunks,
+        'metadata': [str(meta) for meta in (current_metadata or [{}] * len(current_chunks))]
+    })
+    
+    csv_data = chunks_df.to_csv(index=False)
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+        f.write(csv_data)
+        temp_path = f.name
+    
+    return FileResponse(temp_path, filename="chunks.csv", media_type="text/csv")
+
+@app.get("/deep_config/export/embeddings")
+async def export_deep_config_embeddings():
+    """Export embeddings as JSON"""
+    if current_embeddings is None:
+        return {"error": "No embeddings available"}
+    
+    # Convert embeddings to JSON-serializable format
+    embeddings_data = {
+        "embeddings": current_embeddings.tolist(),
+        "shape": current_embeddings.shape,
+        "metadata": current_metadata or [],
+        "model_info": {
+            "model_name": getattr(current_model, 'model_name', 'unknown') if current_model else 'unknown',
+            "embedding_dimension": current_embeddings.shape[1] if len(current_embeddings.shape) > 1 else 0
+        }
+    }
+    
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(embeddings_data, f, indent=2)
+        temp_path = f.name
+    
+    return FileResponse(temp_path, filename="embeddings.json", media_type="application/json")
 # HEALTH CHECK & LARGE FILE SUPPORT INFO
 # ---------------------------
 @app.get("/")
