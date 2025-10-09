@@ -140,6 +140,13 @@ data/exports/
 storage/
 *.log
 
+# History files
+.history/
+
+# Temporary files
+*.tmp
+*.temp
+
 # IDE
 .vscode/
 .idea/
